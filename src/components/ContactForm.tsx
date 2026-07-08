@@ -171,41 +171,48 @@ export default function ContactForm() {
         .cf-form {
           display: flex;
           flex-direction: column;
-          gap: 1.5rem;
+          gap: 1rem;
         }
 
         .cf-field {
           display: flex;
           flex-direction: column;
-          gap: 0;
+          gap: 6px;
         }
 
         .cf-label {
-          display: none;
+          font-family: var(--font-mono, monospace);
+          font-size: 12px;
+          color: #6b7885;
+        }
+
+        .cf-label::before {
+          content: "$ ";
+          color: #3fb950;
         }
 
         .cf-input {
           width: 100%;
-          padding: 1rem;
-          border: 2px solid #e9ecef;
-          border-radius: 12px;
-          font-family: inherit;
-          font-size: 1rem;
-          color: #333;
-          background: white;
+          padding: 11px 14px;
+          border: 1px solid #2a3542;
+          border-radius: 8px;
+          font-family: var(--font-mono, monospace);
+          font-size: 14px;
+          color: #f4f7fa;
+          background: #0a0d11;
           outline: none;
-          transition: border-color 0.3s ease, box-shadow 0.3s ease;
+          transition: border-color 0.15s ease, box-shadow 0.15s ease;
           appearance: none;
           -webkit-appearance: none;
         }
 
         .cf-input::placeholder {
-          color: #999;
+          color: #6b7885;
         }
 
         .cf-input:focus {
           border-color: #ff9900;
-          box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.1);
+          box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.12);
         }
 
         .cf-input:disabled {
@@ -219,8 +226,8 @@ export default function ContactForm() {
         }
 
         .cf-error {
-          font-size: 0.9rem;
-          color: #c0392b;
+          font-size: 0.875rem;
+          color: #ff5f56;
           line-height: 1.5;
           margin: 0;
         }
@@ -232,27 +239,24 @@ export default function ContactForm() {
 
         .cf-submit {
           align-self: flex-start;
-          font-family: inherit;
-          font-size: 1rem;
-          font-weight: 600;
-          color: white;
-          background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-          padding: 14px 28px;
+          font-family: var(--font-mono, monospace);
+          font-size: 14px;
+          font-weight: 700;
+          color: #0a0d11;
+          background: #ff9900;
+          padding: 13px 22px;
           border: none;
-          border-radius: 12px;
+          border-radius: 8px;
           cursor: pointer;
           display: inline-flex;
           align-items: center;
           gap: 0.5rem;
-          transition: all 0.3s ease;
-          box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-          width: 100%;
-          justify-content: center;
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
 
         .cf-submit:hover:not(:disabled) {
           transform: translateY(-2px);
-          box-shadow: 0 15px 40px rgba(255, 153, 0, 0.3);
+          box-shadow: 0 10px 26px rgba(255, 153, 0, 0.32);
         }
 
         .cf-submit:disabled {
@@ -275,32 +279,33 @@ const noticeStyles = `
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
-    padding: 2rem 0;
+    padding: 1.5rem 0;
   }
 
   .cf-notice-icon {
-    width: 3rem;
-    height: 3rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: 50%;
-    background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-    color: white;
+    border: 1px solid #3fb950;
+    color: #3fb950;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     font-weight: 700;
-    box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
+    font-family: var(--font-mono, monospace);
   }
 
   .cf-notice-text {
-    font-size: 1rem;
+    font-size: 0.9375rem;
     font-weight: 400;
-    color: #666;
+    color: #9aa6b2;
     line-height: 1.6;
   }
 
   .cf-reset {
-    font-size: 0.9rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.8125rem;
     font-weight: 600;
     color: #ff9900;
     background: none;
@@ -309,10 +314,10 @@ const noticeStyles = `
     padding: 0;
     text-decoration: underline;
     text-underline-offset: 3px;
-    transition: color 0.2s;
+    transition: opacity 0.2s;
   }
 
   .cf-reset:hover {
-    color: #146eb4;
+    opacity: 0.7;
   }
 `;

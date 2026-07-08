@@ -2,6 +2,8 @@
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Nav from "../components/Nav.astro";
 import Hero from "../components/Hero.astro";
+import Metrics from "../components/Metrics.astro";
+import Dora from "../components/Dora.astro";
 import About from "../components/About.astro";
 import Experience from "../components/Experience.astro";
 import Skills from "../components/Skills.astro";
@@ -14,11 +16,11 @@ const personSchema = {
   "@context": "https://schema.org",
   "@type": "Person",
   name: "Christopher Corbin",
-  jobTitle: "AWS Solutions Architect & Security Engineer",
+  jobTitle: "DevOps & Cloud Engineer",
   description: siteContent.meta.description,
   url: siteContent.meta.url,
   email: `mailto:${siteContent.contact.email}`,
-  image: new URL("/images/og-card.jpg", siteContent.meta.url).href,
+  image: new URL(siteContent.meta.ogImage, siteContent.meta.url).href,
   worksFor: {
     "@type": "Organization",
     name: "GovTech Barbados",
@@ -31,12 +33,13 @@ const personSchema = {
     "@type": "CollegeOrUniversity",
     name: "University of the West Indies, Cave Hill",
   },
-  sameAs: [siteContent.contact.socials.github].filter(Boolean),
+  sameAs: [siteContent.contact.github, siteContent.contact.linkedin],
   knowsAbout: [
     "AWS",
+    "CI/CD",
+    "Infrastructure as Code",
     "Cloud Security",
     "SOC 2 Compliance",
-    "Infrastructure as Code",
     "DevSecOps",
   ],
 };
@@ -45,8 +48,10 @@ const personSchema = {
 <BaseLayout>
   <script type="application/ld+json" set:html={JSON.stringify(personSchema)} is:inline />
   <Nav />
-  <main id="main-content">
+  <main id="top" class="relative mx-auto max-w-[1200px]">
     <Hero />
+    <Metrics />
+    <Dora />
     <About />
     <Experience />
     <Skills />
@@ -55,25 +60,3 @@ const personSchema = {
     <Contact />
   </main>
 </BaseLayout>
-
-<script>
-  // Scroll-triggered reveal using IntersectionObserver
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-          // Once revealed, stop observing
-          observer.unobserve(entry.target);
-        }
-      });
-    },
-    {
-      threshold: 0.08,
-      rootMargin: "0px 0px -40px 0px",
-    }
-  );
-
-  // Observe all reveal elements
-  document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-</script>

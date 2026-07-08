@@ -1,404 +1,334 @@
 export const siteContent = {
   meta: {
     siteName: "Christopher Corbin",
-    title: "Christopher Corbin - AWS Solutions Architect & Security Engineer",
+    title: "Christopher Corbin — DevOps & Cloud Engineer",
     description:
-      "AWS-certified Cloud & Security Engineer building secure public-sector infrastructure at GovTech Barbados, specializing in SOC 2 compliance, DevOps automation, and Well-Architected AWS at scale",
+      "DevOps & Cloud Engineer. I automate the path from commit to production — CI/CD, infrastructure as code, and zero-downtime deploys — built for reliability and real cost savings.",
+    ogDescription:
+      "CI/CD, infrastructure as code, and zero-downtime deploys for public-sector services. Zero failed requests · ~$150K/yr saved · SOC 2 97.2%.",
     domain: "christophercorbin.cloud",
     url: "https://christophercorbin.cloud",
-    ogImage: "/images/og-card.jpg",
+    ogImage: "/images/og-image.png",
+  },
+  nav: {
+    prompt: "~/christopher-corbin — zsh",
+    links: [
+      { label: "about", href: "#about" },
+      { label: "experience", href: "#experience" },
+      { label: "skills", href: "#skills" },
+      { label: "projects", href: "#projects" },
+      { label: "contact", href: "#contact" },
+    ],
+    resume: { label: "resume ↓", href: "/resume" },
   },
   hero: {
-    name: "Christopher Corbin",
-    title: "AWS Solutions Architect & Security Engineer",
-    subtitle:
-      "I build secure, automated cloud infrastructure for public-sector digital services, backed by SOC 2 compliance, 500+ remediated CVEs, and $150K in annual cloud savings",
+    commands: [
+      "$ whoami --role --location",
+      "$ terraform apply -auto-approve",
+      "$ gh workflow run deploy.yml",
+      "$ aws ce get-cost-and-usage",
+    ],
+    kicker: "// DevOps & Cloud Engineer — CI/CD · IaC · reliability",
+    nameLines: ["Christopher", "Corbin"],
+    summary:
+      "I automate the path from commit to production — CI/CD pipelines, infrastructure as code, and zero-downtime deploys for public-sector services, built for reliability and real cost savings.",
     ctas: [
-      { label: "View My Work", href: "#projects", primary: true },
-      { label: "Get In Touch", href: "#contact", primary: false },
+      { label: "→ view projects", href: "#projects", variant: "solid" },
+      {
+        label: "get in touch",
+        href: "mailto:christophercorbin24@gmail.com",
+        variant: "outline",
+      },
+      { label: "↓ resume", href: "/resume", variant: "ghost" },
+    ],
+    status: "● Barbados — open to relocation",
+    photo: {
+      titlebar: "corbin@re-invent — photo.jpg",
+      src: "/images/profile.jpg",
+      alt: "Christopher Corbin at AWS re:Invent",
+    },
+  },
+  metrics: {
+    saved: {
+      label: "ANNUAL CLOUD SPEND SAVED",
+      value: 150,
+      prefix: "$",
+      suffix: "K",
+      caption:
+        "Right-sized compute and automated cost guardrails across a 14-account AWS org — about 20% of total cloud spend.",
+      chartLabel: "monthly cloud cost, FY25",
+      chartTrend: "▼ trending down",
+      points: "0,10 50,24 100,18 150,38 200,50 250,60 300,66",
+    },
+    cells: [
+      {
+        value: "0",
+        sub: " failed",
+        subColor: "green",
+        caption:
+          "requests on blue/green deploys — canary shifting + auto-rollback, keyless OIDC CI/CD",
+      },
+      {
+        value: "Claude",
+        sub: " on Bedrock",
+        subColor: "accent",
+        caption: "LLM workloads shipped via IaC + CI/CD — Anthropic-certified",
+      },
+    ],
+  },
+  dora: {
+    label: "$ delivery --at-a-glance",
+    labelComment: "# DORA",
+    cells: [
+      { label: "Deploy frequency", value: "On merge", caption: "every PR ships via CI/CD", green: false },
+      { label: "Lead time", value: "< 1 hr", caption: "commit → production", green: false },
+      { label: "Change-fail rate", value: "< 5%", caption: "canary + auto-rollback", green: true },
+      { label: "MTTR", value: "Minutes", caption: "alarm-triggered rollback", green: false },
     ],
   },
   about: {
-    bio: "I'm a Cloud Infrastructure Developer at GovTech Barbados, where I design, provision, and secure the cloud infrastructure behind public-sector digital services. Everything is defined as code with Terraform and CloudFormation and shipped through automated CI/CD pipelines.\n\nBefore that, I strengthened enterprise security across a 14-account AWS organization with 2,000+ resources: achieving SOC 2 compliance with a 97.2% audit score and zero critical findings, remediating 500+ CVEs within 30 days, and cutting cloud spend by approximately $150K annually. I am currently pursuing the AWS DevOps Engineer Professional certification.\n\nI also build at the intersection of cloud and AI. Anthropic-certified across the Claude API, agentic coding, the Model Context Protocol, and Claude on Amazon Bedrock, I bring AI-assisted workflows into how infrastructure is designed, secured, and shipped.",
-    stats: [
-      { value: "$150K", label: "Annual Cloud Spend Saved" },
-      { value: "500+", label: "CVEs Remediated in Under 30 Days" },
-      { value: "97.2%", label: "SOC 2 Audit Score, Zero Critical Findings" },
+    label: "01 / about",
+    cmd: "cat about.md",
+    paragraphs: [
+      "I'm a Cloud Infrastructure Developer at <strong>GovTech Barbados</strong>, where I design, provision, and secure the infrastructure behind public-sector digital services. Everything is defined as code with Terraform and CloudFormation and shipped through automated CI/CD.",
+      "Before that, I strengthened security across a 14-account AWS org with 2,000+ resources: SOC 2 at a 97.2% audit score with zero critical findings, 500+ CVEs remediated within 30 days, and ~$150K/yr in cloud savings.",
+      "I also deploy and operate LLM workloads on AWS — provisioning, securing, and shipping Claude on Amazon Bedrock through the same IaC and CI/CD pipelines as everything else. Anthropic-certified across the Claude API, agentic coding, and MCP.",
     ],
   },
+  experience: {
+    label: "02 / experience",
+    cmd: "— git log --oneline",
+    entries: [
+      {
+        role: "Cloud Infrastructure Developer",
+        dates: "Jan 2026 – Present",
+        company: "GovTech Barbados",
+        summary:
+          "IaC (Terraform, CloudFormation) for public-sector services · GitHub Actions CI/CD · IAM, secrets & network controls · CloudWatch / X-Ray observability · technical lead for a multidisciplinary delivery team.",
+        dot: "accent",
+      },
+      {
+        role: "AWS SysOps / Cloud & Security Engineer",
+        dates: "Feb 2025 – Dec 2025",
+        company: "Protexxa — Remote",
+        summary:
+          "Lead engineer on Amazon Connect across 3 regions (+35% response time for 1,000+ users) · SOC 2 at 97.2% · EC2/RDS optimization saving ~$150K/yr · 500+ CVEs in <30 days · 14 accounts, 2,000+ resources.",
+        dot: "green",
+      },
+      {
+        role: "Technical Guide & Operations · Apple Rep",
+        dates: "2021 – 2024",
+        company: "TORE Barbados · iShop",
+        summary:
+          "Operations leadership and equipment reliability (-20% downtime) · Apple technical support, customer education, and escalation handling.",
+        dot: "gray",
+      },
+    ],
+  },
+  skills: {
+    label: "03 / skills",
+    cmd: "— ls ~/stack",
+    cards: [
+      {
+        title: "ci/cd & automation/",
+        tags: ["GitHub Actions", "CodePipeline", "Docker hardening", "Blue/Green"],
+        more: "+5 more",
+      },
+      {
+        title: "cloud & iac/",
+        tags: ["Terraform", "CloudFormation", "CDK", "OpenTofu", "ECS · Lambda"],
+        more: "+8 more",
+      },
+      {
+        title: "security & compliance/",
+        tags: ["SOC 2", "NIST CSF", "CIS Benchmarks", "Zero Trust", "Vuln Mgmt"],
+        more: "+5 more",
+      },
+      {
+        title: "cloud + ai/",
+        tags: ["Claude API", "Claude on Bedrock", "MCP", "Python · Bash"],
+        more: "+4 more",
+      },
+    ],
+  },
+  projects: {
+    label: "04 / featured projects",
+    cards: [
+      {
+        titlebar: "math-mentor · live demo",
+        dot: "green",
+        title: "MathMentor Barbados — Socratic AI Tutor",
+        description:
+          "Bajan Socratic math tutor on Claude via Bedrock. Serverless Lambda enforces one-hint-at-a-time pedagogy; KaTeX frontend; OpenTofu behind CloudFront.",
+        highlight: "▸ syllabus-aware, Common Entrance → CSEC/CXC",
+        links: [
+          { label: "view code →", href: "https://github.com/christophercorbin/math-mentor", primary: false },
+          { label: "live demo →", href: "https://d297i0l0pfbu7x.cloudfront.net", primary: true },
+        ],
+      },
+      {
+        titlebar: "hurricane-ready · live demo",
+        dot: "green",
+        title: "Hurricane-Ready — Bajan Storm Alerts",
+        description:
+          "Watches the NOAA/NHC feed, computes threat deterministically (software decides, not AI), and has Claude explain it calmly. Hardened container on ECS Fargate.",
+        highlight: "▸ SMS/email/webhook alerts · Beryl 2024 replay",
+        links: [
+          { label: "view code →", href: "https://github.com/christophercorbin/hurricane-ready", primary: false },
+          { label: "live demo →", href: "https://d1a03jmlh4dne2.cloudfront.net", primary: true },
+        ],
+      },
+      {
+        titlebar: "secure-landing-zone · open source",
+        dot: "accent",
+        title: "Secure Public-Sector Landing Zone",
+        description:
+          "Modular OpenTofu landing zone: org guardrails as code (SCPs, region allowlists, IMDSv2), CIS-aligned detective baseline, and AI-generated SOC 2 evidence.",
+        highlight: "▸ CloudTrail · Config · Security Hub",
+        links: [
+          { label: "view code →", href: "https://github.com/christophercorbin/secure-landing-zone", primary: false },
+          { label: "docs →", href: "https://github.com/christophercorbin/secure-landing-zone#readme", primary: true },
+        ],
+      },
+      {
+        titlebar: "zero-downtime-pipeline · open source",
+        dot: "accent",
+        title: "Zero-Downtime Delivery Pipeline",
+        description:
+          "Blue/green ECS Fargate through CodeDeploy with 10% canary traffic shifting, CloudWatch alarm-triggered auto rollback, and keyless OIDC CI/CD — all in OpenTofu.",
+        highlight: "▸ live chaos-rollback demo · zero failed requests",
+        links: [
+          { label: "view code →", href: "https://github.com/christophercorbin/zero-downtime-pipeline", primary: false },
+          { label: "docs →", href: "https://github.com/christophercorbin/zero-downtime-pipeline#readme", primary: true },
+        ],
+      },
+    ],
+  },
+  certifications: {
+    label: "05 / certifications",
+    badges: [
+      { name: "AWS Solutions Architect – Associate", meta: "'25", inProgress: false },
+      { name: "CompTIA Security+ ce", meta: "'24", inProgress: false },
+      { name: "Cybersecurity Analyst", meta: "'24", inProgress: false },
+      { name: "BSc Computer Science — UWI", meta: null, inProgress: false },
+      { name: "AWS DevOps Pro", meta: "— in progress", inProgress: true },
+      { name: "Anthropic AI Engineering", meta: "8 courses", inProgress: false },
+    ],
+  },
+  contact: {
+    label: "06 / contact",
+    cmd: "— ./connect.sh",
+    heading: "Let's connect.",
+    blurb:
+      "Open to cloud architecture & security engineering roles. Open to relocation and willing to travel.",
+    email: "christophercorbin24@gmail.com",
+    phone: "+1 (246) 248-7457",
+    phoneHref: "tel:+12462487457",
+    location: "Barbados · open to relocation",
+    github: "https://github.com/christophercorbin",
+    githubDisplay: "github.com/christophercorbin",
+    linkedin: "https://www.linkedin.com/in/christophercorbin",
+    linkedinDisplay: "linkedin.com/in/christophercorbin",
+  },
+  footer: {
+    copyright: "© 2026 Christopher Corbin — built with Astro · deployed on AWS Amplify",
+    links: [
+      { label: "github", href: "https://github.com/christophercorbin" },
+      { label: "linkedin", href: "https://www.linkedin.com/in/christophercorbin" },
+      { label: "email", href: "mailto:christophercorbin24@gmail.com" },
+      { label: "resume", href: "/resume" },
+    ],
+  },
+} as const;
+
+export const resumeContent = {
+  title: "Christopher Corbin — Résumé",
+  name: "Christopher Corbin",
+  tagline: "DevOps & Cloud Engineer · CI/CD · Infrastructure as Code · Reliability",
+  contactLines: [
+    "christophercorbin24@gmail.com",
+    "+1 (246) 248-7457",
+    "github.com/christophercorbin",
+    "linkedin.com/in/christophercorbin",
+  ],
+  location: "Barbados · open to relocation",
+  summary:
+    "I automate the path from commit to production — CI/CD pipelines, infrastructure as code, and zero-downtime deploys for public-sector digital services. Everything shipped through automation, SOC 2 compliant, and engineered to save real money. I also deploy and operate LLM workloads on AWS — Claude on Amazon Bedrock, shipped through the same IaC and CI/CD pipelines as everything else.",
+  dora: [
+    { label: "Deploy freq", value: "On merge", green: false },
+    { label: "Lead time", value: "< 1 hr", green: false },
+    { label: "Change-fail", value: "< 5%", green: true },
+    { label: "MTTR", value: "Minutes", green: false },
+  ],
   experience: [
     {
-      company: "GovTech Barbados",
       role: "Cloud Infrastructure Developer",
       dates: "Jan 2026 – Present",
-      location: "Barbados",
+      company: "GovTech Barbados",
       bullets: [
-        "Design, provision and maintain secure, scalable cloud infrastructure for public sector digital services using infrastructure-as-code (Terraform, AWS CloudFormation)",
-        "Build and manage CI/CD pipelines with GitHub Actions, automating deployments and enabling fast, secure releases for government services",
-        "Implement infrastructure security best practices including IAM policies, secrets management, and network access controls",
-        "Configure monitoring, alerting and logging (CloudWatch, X-Ray) to support reliable service operations and operational visibility",
-        "Lead infrastructure setup, deployment strategies, and technical guidance for multidisciplinary digital delivery team",
-      ],
-      tech: [
-        "Terraform",
-        "AWS CloudFormation",
-        "GitHub Actions",
-        "CloudWatch",
-        "X-Ray",
-        "IAM",
-        "Secrets Manager",
+        "IaC with Terraform & CloudFormation for public-sector services; GitHub Actions CI/CD across environments.",
+        "IAM, secrets & network controls; CloudWatch / X-Ray observability and alerting.",
+        "Technical lead for a multidisciplinary delivery team.",
       ],
     },
     {
-      company: "Protexxa",
       role: "AWS SysOps / Cloud & Security Engineer",
       dates: "Feb 2025 – Dec 2025",
-      location: "Remote",
+      company: "Protexxa — Remote",
       bullets: [
-        "Lead Technical Engineer on Amazon Connect deployment across 3 AWS regions, improving customer response times by 35% for 1,000+ users",
-        "Achieved SOC 2 compliance (97.2% audit score, zero critical findings) and influenced C-suite investment decisions",
-        "Optimized EC2/RDS workloads, saving 20% cloud spend (~$150K annually)",
-        "Remediated 500+ CVEs in under 30 days, reducing manual effort by 60%",
-        "Managed 14 AWS accounts with 2,000+ resources supporting public-facing workloads",
-      ],
-      tech: [
-        "AWS",
-        "EC2",
-        "RDS",
-        "Amazon Connect",
-        "SOC 2",
-        "CDK",
-        "Terraform",
-        "GitHub Actions",
+        "Lead engineer on Amazon Connect across 3 regions — +35% response time for 1,000+ users.",
+        "Drove SOC 2 to a 97.2% audit score with zero critical findings across a 14-account org (2,000+ resources).",
+        "EC2/RDS optimization saving ~$150K/yr; 500+ CVEs remediated in under 30 days.",
       ],
     },
     {
-      company: "TORE Barbados",
-      role: "Technical Guide & Operations",
-      dates: "Jul 2021 – Present",
-      location: "Barbados",
+      role: "Technical Guide & Operations · Apple Rep",
+      dates: "2021 – 2024",
+      company: "TORE Barbados · iShop",
       bullets: [
-        "Lead off-road tour operations and proactive equipment maintenance, cutting downtime by 20%",
-      ],
-      tech: ["Operations Management", "Team Leadership"],
-    },
-    {
-      company: "iShop",
-      role: "Apple Representative",
-      dates: "Oct 2021 – Sep 2024",
-      location: "Barbados",
-      bullets: [
-        "Provided technical support, customer education, and escalation handling for Apple devices",
-      ],
-      tech: ["Customer Support", "Technical Training"],
-    },
-  ],
-  skills: [
-    {
-      category: "Cloud Platforms & Services",
-      items: [
-        "EC2",
-        "S3",
-        "RDS",
-        "VPC",
-        "IAM",
-        "Lambda",
-        "ECS",
-        "ECR",
-        "Systems Manager",
-        "Inspector",
-        "CloudFormation",
-        "CDK",
-        "Connect",
-        "SageMaker",
-        "Elastic Beanstalk",
-        "Azure Security",
-        "Multi-Account Strategy",
-      ],
-    },
-    {
-      category: "Security & Compliance",
-      items: [
-        "SOC 2 Implementation",
-        "NIST CSF",
-        "CIS Benchmarks",
-        "PCI DSS",
-        "GDPR Alignment",
-        "Container Hardening",
-        "Vulnerability Management",
-        "Zero Trust Architecture",
-        "RBAC",
-        "Patch Automation",
-      ],
-    },
-    {
-      category: "DevSecOps & IaC",
-      items: [
-        "AWS CDK",
-        "Terraform",
-        "GitHub Actions",
-        "Jenkins",
-        "AWS CodePipeline",
-        "Docker Hardening",
-        "CI/CD Pipelines",
-        "Zero-Downtime Deployments",
-        "Image Verification",
-      ],
-    },
-    {
-      category: "Monitoring & Observability",
-      items: [
-        "Datadog",
-        "CloudWatch",
-        "AWS Inspector",
-        "Security Monitoring",
-        "Performance Metrics",
-        "Alerting & Dashboards",
-        "Log Analysis",
-        "Pi-hole DNS",
-      ],
-    },
-    {
-      category: "Programming & Scripting",
-      items: [
-        "Python",
-        "Bash",
-        "PowerShell",
-        "HTML/CSS",
-        "JavaScript",
-        "Infrastructure Automation",
-        "Security Scripts",
-        "ML Integration",
-        "Claude API",
-        "Model Context Protocol (MCP)",
-        "AI-Assisted Engineering",
-      ],
-    },
-    {
-      category: "Leadership & Communication",
-      items: [
-        "Executive Communication",
-        "C-Suite Reporting",
-        "Technical Leadership",
-        "Cross-Functional Collaboration",
-        "DevSecOps Partnership",
-        "Project Management",
-        "Risk Communication",
-        "Cost Strategy",
-        "Compliance Advocacy",
-      ],
-    },
-    {
-      category: "Systems & Infrastructure",
-      items: [
-        "Linux (Ubuntu, Amazon Linux)",
-        "Windows Server",
-        "VMware Workstation Pro",
-        "Docker & Kubernetes",
-        "TCP/IP Networking",
-        "Load Balancing",
-        "VPN & Remote Access",
-        "Homelab Management",
-      ],
-    },
-    {
-      category: "Problem Solving & Innovation",
-      items: [
-        "Automation Design",
-        "Cost Optimization",
-        "Process Improvement",
-        "Incident Response",
-        "Root Cause Analysis",
-        "Performance Tuning",
-        "Technical Innovation",
-        "Scalability Planning",
+        "Operations leadership and equipment reliability (-20% downtime); Apple technical support, customer education & escalation.",
       ],
     },
   ],
   projects: [
     {
-      title: "MathMentor Barbados: Socratic AI Math Tutor",
+      title: "MathMentor Barbados — Socratic AI Tutor",
       description:
-        "Students learn more from guided struggle than from handed-over answers. Built a Bajan Socratic math tutor powered by Claude on Amazon Bedrock, syllabus-aware from Common Entrance to CSEC/CXC: a serverless Lambda backend enforces one-hint-at-a-time pedagogy, a KaTeX chat frontend renders the math, and OpenTofu deploys the stack behind CloudFront.",
-      tech: [
-        "Claude on Amazon Bedrock",
-        "AWS Lambda",
-        "Prompt Engineering",
-        "Docker",
-        "CloudFront",
-        "OpenTofu",
-      ],
-      links: {
-        github: "https://github.com/christophercorbin/math-mentor",
-        live: "https://d297i0l0pfbu7x.cloudfront.net",
-      },
-    },
-    {
-      title: "Hurricane-Ready: Bajan Storm Alerts",
-      description:
-        "Most storms don't hit Barbados directly, they pass nearby and still bring damaging wind, rain, and seas. Built a hurricane-preparedness service that watches the NOAA/NHC feed, computes the threat deterministically (so software, never AI, decides how worried to be), and has Claude on Bedrock explain it calmly. Ships as one hardened container on ECS Fargate behind CloudFront, with SMS/email/webhook alerts and a Beryl 2024 replay mode.",
-      tech: [
-        "Claude on Amazon Bedrock",
-        "ECS Fargate",
-        "Docker",
-        "CloudFront",
-        "Amazon SNS / SES",
-        "GitHub Actions CI/CD",
-      ],
-      links: {
-        github: "https://github.com/christophercorbin/hurricane-ready",
-        live: "https://d1a03jmlh4dne2.cloudfront.net",
-      },
+        "Bajan Socratic math tutor on Claude via Bedrock. Serverless Lambda enforces one-hint-at-a-time pedagogy; OpenTofu behind CloudFront.",
     },
     {
       title: "Secure Public-Sector Landing Zone",
       description:
-        "Government and regulated teams rebuild the same AWS account baseline every time. Built a modular OpenTofu landing zone: organization guardrails as code (SCPs for root denial, region allowlists, IMDSv2), a CIS-aligned detective baseline (CloudTrail, Config, Security Hub), and an AI assistant that turns live findings into SOC 2-style evidence packs using Claude on Bedrock.",
-      tech: [
-        "OpenTofu",
-        "AWS Organizations",
-        "SCPs",
-        "Security Hub",
-        "AWS Config",
-        "Claude on Bedrock",
-      ],
-      links: {
-        github: "https://github.com/christophercorbin/secure-landing-zone",
-        demo: "https://github.com/christophercorbin/secure-landing-zone#readme",
-      },
+        "Modular OpenTofu landing zone: org guardrails as code (SCPs, IMDSv2), CIS-aligned baseline, AI-generated SOC 2 evidence.",
+    },
+    {
+      title: "Hurricane-Ready — Bajan Storm Alerts",
+      description:
+        "Deterministic threat scoring on the NOAA/NHC feed with Claude explanations; hardened container on ECS Fargate.",
     },
     {
       title: "Zero-Downtime Delivery Pipeline",
       description:
-        "Deployments should be boring. Built a progressive-delivery reference pipeline: blue/green ECS Fargate through CodeDeploy with 10% canary traffic shifting, CloudWatch alarm-triggered automatic rollback, and keyless OIDC CI/CD from GitHub Actions, all defined in OpenTofu. Includes a chaos switch that demos a live rollback with zero failed requests on the stable path.",
-      tech: [
-        "ECS Fargate",
-        "CodeDeploy",
-        "Blue/Green Canary",
-        "GitHub Actions OIDC",
-        "CloudWatch",
-        "OpenTofu",
-      ],
-      links: {
-        github: "https://github.com/christophercorbin/zero-downtime-pipeline",
-        demo: "https://github.com/christophercorbin/zero-downtime-pipeline#readme",
-      },
-    },
-    {
-      title: "SOC2 ML Image Analyzer",
-      description:
-        "Enterprises need ML image analysis that meets strict compliance requirements. Built a SOC 2-compliant service using Deepface for facial recognition, with containerized deployment on AWS SageMaker and comprehensive security controls, achieving a 97.2% compliance score with sub-5-minute deployments.",
-      tech: [
-        "Deepface ML",
-        "Docker Security Hardening",
-        "AWS SageMaker",
-        "SOC 2 Framework",
-        "Microservice Architecture",
-        "API Gateway",
-      ],
-      links: {
-        github:
-          "https://github.com/christophercorbin/SOC2-ml-image-analyzer-dev/tree/soc2-hardened",
-        demo: "https://github.com/christophercorbin/SOC2-ml-image-analyzer-dev/tree/soc2-hardened#readme",
-      },
-    },
-    {
-      title: "christophercorbin.cloud (This Site)",
-      description:
-        "A portfolio should demonstrate the engineering it advertises. Rebuilt this site from a multi-account S3 + CloudFront setup into a single modern stack: Astro 6 static frontend on AWS Amplify Hosting, a serverless contact pipeline (Lambda Function URL + DynamoDB + SES) defined with Amplify Gen 2, and CI/CD on every push, shipping a fully static site with sub-second loads.",
-      tech: [
-        "Astro",
-        "AWS Amplify Gen 2",
-        "Lambda",
-        "DynamoDB",
-        "SES",
-        "GitHub Actions",
-        "OpenTofu",
-      ],
-      links: {
-        github: "https://github.com/christophercorbin/eportfolio-v2",
-        live: "https://christophercorbin.cloud",
-      },
+        "Blue/green ECS Fargate via CodeDeploy, 10% canary shifting, alarm-triggered auto rollback, keyless OIDC CI/CD — all in OpenTofu.",
     },
   ],
-  certifications: {
-    badges: [
-      {
-        name: "AWS Solutions Architect - Associate",
-        credlyId: "97e63154-4551-4d04-b887-fdf87a609961",
-        issuer: "Amazon Web Services Training and Certification",
-        year: "2025",
-        inProgress: false,
-      },
-      {
-        name: "CompTIA Security+ ce Certification",
-        credlyId: "0407670a-35ff-49d6-ad3b-5680d7e8e2d9",
-        issuer: "Computing Technology Industry Association",
-        year: "2024",
-        inProgress: false,
-      },
-      {
-        name: "Cybersecurity Analyst",
-        credlyId: null,
-        issuer: "CyberNations & George Brown College",
-        year: "2024",
-        inProgress: false,
-      },
-      {
-        name: "BSc Computer Science",
-        credlyId: null,
-        issuer: "University of the West Indies, Cave Hill",
-        year: "Graduate",
-        inProgress: false,
-      },
-      {
-        name: "AWS DevOps Engineer - Professional",
-        credlyId: null,
-        issuer: "Amazon Web Services",
-        year: null,
-        inProgress: true,
-      },
-      {
-        name: "Networking Basics",
-        credlyId: "802f49a6-d9c1-4707-a3a6-02669c71f978",
-        issuer: "Cisco",
-        year: null,
-        inProgress: false,
-      },
-      {
-        name: "Introduction to Cybersecurity",
-        credlyId: "43fbe669-ad92-42c6-a8de-4107a90a2087",
-        issuer: "Cisco",
-        year: null,
-        inProgress: false,
-      },
-    ],
-    anthropicTraining: {
-      title: "Anthropic Academy: AI Engineering Training",
-      blurb:
-        "Certified coursework in building with Claude: API integration, agentic coding workflows, and the Model Context Protocol.",
-      courses: [
-        { name: "Building with the Claude API", completed: "Apr 2026" },
-        { name: "Claude Code in Action", completed: "Apr 2026" },
-        { name: "Introduction to Model Context Protocol", completed: "Apr 2026" },
-        { name: "Introduction to Agent Skills", completed: "Apr 2026" },
-        { name: "Claude 101", completed: "Apr 2026" },
-        { name: "Claude Code 101", completed: "Apr 2026" },
-        { name: "Introduction to Claude Cowork", completed: "Apr 2026" },
-        { name: "Claude with Amazon Bedrock", completed: "Jun 2026" },
-      ],
-    },
-  },
-  contact: {
-    email: "christophercorbin24@gmail.com",
-    emailDisplay: "christophercorbin24@gmail.com",
-    phone: "+1 (246) 248-7457",
-    location: "Barbados | Open to relocation",
-    socials: {
-      github: "https://github.com/christophercorbin",
-      linkedin: null,
-    },
+  skills: [
+    { key: "cloud & iac/", value: "AWS · Terraform · CloudFormation · CDK · OpenTofu · ECS · Lambda · CloudFront" },
+    { key: "security/", value: "SOC 2 · NIST CSF · CIS Benchmarks · Zero Trust · Vulnerability Management · IAM" },
+    { key: "devsecops/", value: "GitHub Actions · CodePipeline · Docker hardening · Blue/Green · CloudWatch · X-Ray" },
+    { key: "cloud + ai/", value: "Claude API · Claude on Bedrock · MCP · Python · Bash" },
+  ],
+  certifications: [
+    "AWS Solutions Architect – Associate '25",
+    "CompTIA Security+ ce '24 · Cybersecurity Analyst '24",
+    "Anthropic AI Engineering — 8 courses",
+    "AWS DevOps Pro — in progress",
+  ],
+  education: {
+    degree: "BSc Computer Science",
+    school: "University of the West Indies (UWI)",
   },
 } as const;
 
 export type SiteContent = typeof siteContent;
+export type ResumeContent = typeof resumeContent;

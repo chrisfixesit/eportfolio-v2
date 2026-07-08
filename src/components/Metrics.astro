@@ -1,0 +1,150 @@
+---
+import { siteContent } from "../data/content";
+
+const { saved, cells } = siteContent.metrics;
+---
+
+<div class="grid grid-cols-[1.5fr_1fr] border-y border-line max-[920px]:grid-cols-1">
+  <!-- dominant cell: cloud spend saved + sparkline -->
+  <div class="relative flex flex-col border-r border-line px-11 py-9 max-[920px]:border-r-0 max-[920px]:border-b">
+    <div class="absolute left-0 top-0 h-full w-[3px] bg-accent" aria-hidden="true"></div>
+    <div class="font-mono text-[13px] tracking-[0.06em] text-faint">{saved.label}</div>
+    <div
+      id="metric-saved"
+      class="mt-2 font-mono text-[74px] font-extrabold leading-none tracking-[-0.03em] text-accent max-[920px]:text-[62px] max-[560px]:text-[52px]"
+      data-countup
+      data-target={saved.value}
+      data-prefix={saved.prefix}
+      data-suffix={saved.suffix}
+    >{saved.prefix}0{saved.suffix}</div>
+    <div class="mt-2.5 max-w-[430px] text-sm text-muted-2">{saved.caption}</div>
+    <div class="mt-auto pt-[26px]">
+      <div class="mb-2 flex items-baseline justify-between font-mono text-[11px] text-faint">
+        <span>{saved.chartLabel}</span><span class="text-green">{saved.chartTrend}</span>
+      </div>
+      <svg id="save-chart" viewBox="0 0 300 76" preserveAspectRatio="none" class="block h-[58px] w-full overflow-visible" aria-hidden="true">
+        <defs>
+          <linearGradient id="saveGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ff9900" stop-opacity="0.22"></stop>
+            <stop offset="1" stop-color="#ff9900" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+        <line x1="0" y1="75" x2="300" y2="75" stroke="#1c2530" stroke-width="1"></line>
+        <path
+          id="save-area"
+          d={`M${saved.points.split(" ").join(" L")} L300,76 L0,76 Z`}
+          fill="url(#saveGrad)"
+          opacity="0"
+          style="transition: opacity .7s ease .3s;"
+        ></path>
+        <polyline
+          id="save-line"
+          points={saved.points}
+          fill="none"
+          stroke="#ff9900"
+          stroke-width="2.5"
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          vector-effect="non-scaling-stroke"
+        ></polyline>
+      </svg>
+    </div>
+  </div>
+
+  <!-- two stacked cells -->
+  <div class="grid grid-rows-2">
+    {cells.map((cell, i) => (
+      <div class:list={["px-10 py-[26px]", i === 0 && "border-b border-line"]}>
+        <div class="font-mono text-4xl font-extrabold tracking-[-0.02em] text-ink">
+          {cell.value}<span class:list={["text-xl font-bold", cell.subColor === "green" ? "text-green" : "text-accent"]}>{cell.sub}</span>
+        </div>
+        <div class="mt-1 text-sm text-muted-2">{cell.caption}</div>
+      </div>
+    ))}
+  </div>
+</div>
+
+<script>
+  // Count-up numbers: ease-out cubic from 0, triggered on scroll into view
+  const runCountUp = (el: HTMLElement) => {
+    if (el.dataset.done) return;
+    el.dataset.done = "1";
+    const target = parseFloat(el.dataset.target ?? "");
+    if (isNaN(target)) return;
+    const decimals = parseInt(el.dataset.decimals ?? "0", 10);
+    const prefix = el.dataset.prefix ?? "";
+    const suffix = el.dataset.suffix ?? "";
+    const dur = 900;
+    const t0 = performance.now();
+    const frame = (now: number) => {
+      const p = Math.min(1, (now - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + (target * eased).toFixed(decimals) + suffix;
+      if (p < 1) requestAnimationFrame(frame);
+      else el.textContent = prefix + target.toFixed(decimals) + suffix;
+    };
+    requestAnimationFrame(frame);
+  };
+
+  const countUps = [...document.querySelectorAll<HTMLElement>("[data-countup]")];
+  if (!("IntersectionObserver" in window)) {
+    countUps.forEach(runCountUp);
+  } else {
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            runCountUp(e.target as HTMLElement);
+            io.unobserve(e.target);
+          }
+        });
+      },
+      { threshold: 0.4 }
+    );
+    countUps.forEach((n) => io.observe(n));
+  }
+
+  // Cost sparkline: line draws left→right, area fades in, on scroll into view
+  const svg = document.getElementById("save-chart");
+  const drawChart = () => {
+    if (!svg) return;
+    const line = svg.querySelector<SVGPolylineElement>("#save-line");
+    const area = svg.querySelector<SVGPathElement>("#save-area");
+    if (!line) return;
+    const len = line.getTotalLength();
+    line.style.transition = "none";
+    line.style.strokeDasharray = String(len);
+    line.style.strokeDashoffset = String(len);
+    line.getBoundingClientRect();
+    line.style.transition = "stroke-dashoffset 1.1s cubic-bezier(.22,.61,.36,1)";
+    line.style.strokeDashoffset = "0";
+    if (area) {
+      area.style.opacity = "0";
+      area.getBoundingClientRect();
+      area.style.opacity = "1";
+    }
+  };
+  if (svg) {
+    const trigger = () => {
+      if (svg.dataset.drawn) return;
+      svg.dataset.drawn = "1";
+      drawChart();
+    };
+    if (!("IntersectionObserver" in window)) {
+      trigger();
+    } else {
+      const io = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((e) => {
+            if (e.isIntersecting) {
+              trigger();
+              io.unobserve(e.target);
+            }
+          });
+        },
+        { threshold: 0.4 }
+      );
+      io.observe(svg);
+    }
+  }
+</script>
