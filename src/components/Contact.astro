@@ -17,7 +17,6 @@ const { contact, footer } = siteContent;
     </div>
     <div class="flex flex-col gap-2.5 font-mono text-sm text-body">
       <a href={`mailto:${contact.email}`} class="text-accent">{contact.email}</a>
-      <a href={contact.phoneHref}>{contact.phone}</a>
       <a href={contact.github} target="_blank" rel="noopener noreferrer">{contact.githubDisplay}</a>
       <a href={contact.linkedin} target="_blank" rel="noopener noreferrer">{contact.linkedinDisplay}</a>
       <span class="text-faint">{contact.location}</span>

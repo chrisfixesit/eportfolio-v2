@@ -78,12 +78,12 @@ export const siteContent = {
   },
   dora: {
     label: "$ delivery --at-a-glance",
-    labelComment: "# DORA",
+    labelComment: "# how I ship",
     cells: [
-      { label: "Deploy frequency", value: "On merge", caption: "every PR ships via CI/CD", green: false },
-      { label: "Lead time", value: "< 1 hr", caption: "commit → production", green: false },
-      { label: "Change-fail rate", value: "< 5%", caption: "canary + auto-rollback", green: true },
-      { label: "MTTR", value: "Minutes", caption: "alarm-triggered rollback", green: false },
+      { label: "Deploy frequency", value: "On merge", caption: "GitHub Actions + Amplify — every PR ships via CI/CD", green: false },
+      { label: "Lead time", value: "Minutes", caption: "commit → production, fully automated", green: false },
+      { label: "Security patching", value: "< 30 days", caption: "500+ CVEs remediated across 14 accounts", green: true },
+      { label: "Rollback", value: "Automatic", caption: "alarm-triggered, 10% canary shifting", green: false },
     ],
   },
   about: {
@@ -112,7 +112,7 @@ export const siteContent = {
         dates: "Feb 2025 – Dec 2025",
         company: "Protexxa — Remote",
         summary:
-          "Lead engineer on Amazon Connect across 3 regions (+35% response time for 1,000+ users) · SOC 2 at 97.2% · EC2/RDS optimization saving ~$150K/yr · 500+ CVEs in <30 days · 14 accounts, 2,000+ resources.",
+          "Lead engineer on Amazon Connect across 3 regions (35% faster response times for 1,000+ users) · SOC 2 at 97.2% · EC2/RDS optimization saving ~$150K/yr · 500+ CVEs in <30 days · 14 accounts, 2,000+ resources.",
         dot: "green",
       },
       {
@@ -222,8 +222,6 @@ export const siteContent = {
     blurb:
       "Open to cloud architecture & security engineering roles. Open to relocation and willing to travel.",
     email: "christophercorbin24@gmail.com",
-    phone: "+1 (246) 248-7457",
-    phoneHref: "tel:+12462487457",
     location: "Barbados · open to relocation",
     github: "https://github.com/christophercorbin",
     githubDisplay: "github.com/christophercorbin",
@@ -256,9 +254,9 @@ export const resumeContent = {
     "I automate the path from commit to production — CI/CD pipelines, infrastructure as code, and zero-downtime deploys for public-sector digital services. Everything shipped through automation, SOC 2 compliant, and engineered to save real money. I also deploy and operate LLM workloads on AWS — Claude on Amazon Bedrock, shipped through the same IaC and CI/CD pipelines as everything else.",
   dora: [
     { label: "Deploy freq", value: "On merge", green: false },
-    { label: "Lead time", value: "< 1 hr", green: false },
-    { label: "Change-fail", value: "< 5%", green: true },
-    { label: "MTTR", value: "Minutes", green: false },
+    { label: "Lead time", value: "Minutes", green: false },
+    { label: "Patching", value: "< 30 days", green: true },
+    { label: "Rollback", value: "Automatic", green: false },
   ],
   experience: [
     {
@@ -276,7 +274,7 @@ export const resumeContent = {
       dates: "Feb 2025 – Dec 2025",
       company: "Protexxa — Remote",
       bullets: [
-        "Lead engineer on Amazon Connect across 3 regions — +35% response time for 1,000+ users.",
+        "Lead engineer on Amazon Connect across 3 regions — 35% faster response times for 1,000+ users.",
         "Drove SOC 2 to a 97.2% audit score with zero critical findings across a 14-account org (2,000+ resources).",
         "EC2/RDS optimization saving ~$150K/yr; 500+ CVEs remediated in under 30 days.",
       ],
