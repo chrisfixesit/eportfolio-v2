@@ -14,7 +14,7 @@ reviews:
     enabled: true
     drafts: false
     ignore_title_keywords:
-      - "WIP"
+      - "[WIP]"
       - "[skip review]"
 
   path_filters:
