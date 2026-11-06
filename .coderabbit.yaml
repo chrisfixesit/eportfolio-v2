@@ -1,0 +1,102 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+tone_instructions: "Be concise. Prioritise the contact form's security, accessibility and SEO over style nits."
+
+reviews:
+  profile: chill
+  # Request changes for blocking findings; approve once they're resolved
+  auto_approvals:
+    enabled: true
+    # Authors can't wave findings through with @coderabbitai approve/resolve
+    allow_author_approval: false
+    # Above this risk (see merge_risk_instructions) CodeRabbit withholds its
+    # approval. That is advisory, not a merge gate: whoever merges decides.
+    max_merge_risk: moderate
+    # Lockfiles are excluded from review below, so a dependency-only change
+    # must never be auto-approved; it needs a human look.
+    overrides:
+      - paths:
+          - "**/package-lock.json"
+        enabled: false
+  merge_risk_instructions: >
+    High: the contact-form Lambda (validation, SES, rate limits),
+    ContactForm.tsx, IAM or Amplify backend changes, and security headers.
+    Moderate: routing, metadata, canonical URLs and the sitemap. Low: content.ts
+    copy, styling and docs.
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    ignore_title_keywords:
+      - "[WIP]"
+      - "[skip review]"
+
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/.astro/**"
+    - "!**/.amplify/**"
+    - "!**/amplify_outputs.json"
+    - "!**/package-lock.json"
+    - "!docs/superpowers/**"
+
+  path_instructions:
+    - path: "src/components/**/*.astro"
+      instructions: >
+        Copy belongs in src/data/content.ts, not hardcoded in components. Prefer
+        Tailwind utilities; scoped <style> only when Tailwind can't express it.
+        Check images have meaningful alt text, headings stay in order, and links
+        that open new tabs use rel="noopener noreferrer".
+    - path: "src/components/ContactForm.tsx"
+      instructions: >
+        The only React island and the only dynamic feature. Check client-side
+        validation matches the Lambda's, the form is accessible (labels, error
+        announcements, focus), and no secrets or endpoints beyond the public
+        contact URL reach the client bundle.
+    - path: "src/styles/**"
+      instructions: >
+        Tailwind v4: tokens live in @theme in global.css and custom utilities use
+        @utility. Flag any tailwind.config.* file or v3-style @tailwind directives.
+    - path: "src/**/*.{ts,tsx}"
+      instructions: >
+        TypeScript strict: flag `any` and `@ts-expect-error` without an explaining
+        comment.
+    - path: "src/{pages,layouts}/**"
+      instructions: >
+        Astro ships zero JS by default; flag client:* directives that aren't
+        needed. Check each page keeps its title, meta description and Open Graph
+        tags.
+    - path: "amplify/functions/contact-form/**"
+      instructions: >
+        Public, unauthenticated endpoint. Check input validation and length limits,
+        header injection in emails built from user input, rate limiting or spam
+        protection, and that errors don't leak internals. Don't log message bodies
+        or email addresses.
+    - path: "amplify/backend.ts"
+      instructions: >
+        Flag IAM with wildcard actions or resources (e.g. ses:* or Resource "*"
+        for SES sends) and overly permissive CORS on the contact endpoint.
+    - path: ".github/workflows/**"
+      instructions: >
+        Flag unpinned third-party actions, overly broad `permissions`, and secrets
+        echoed to logs.
+
+  tools:
+    gitleaks:
+      enabled: true
+    eslint:
+      enabled: true
+    actionlint:
+      enabled: true
+    markdownlint:
+      enabled: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: global
