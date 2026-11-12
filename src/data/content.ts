@@ -31,7 +31,7 @@ export const siteContent = {
     ctas: [
       { label: "watch a deploy", href: "#deploy", variant: "solid" },
       { label: "view projects", href: "#projects", variant: "outline" },
-      { label: "resume", href: "/resume", variant: "ghost" },
+      { label: "resume", href: "/resume", variant: "outline" },
     ],
     status: "● Barbados · open to relocation",
     photo: {
