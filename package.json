@@ -13,6 +13,8 @@
   },
   "dependencies": {
     "@astrojs/react": "^5.0.4",
+    "@fontsource-variable/jetbrains-mono": "^5.2.8",
+    "@fontsource/ibm-plex-sans": "^5.2.8",
     "@tailwindcss/vite": "^4.2.4",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",

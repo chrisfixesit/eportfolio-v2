@@ -1,309 +1,98 @@
 ---
 import { siteContent } from "../data/content";
-import Icon from "./Icon.astro";
 
-const navLinks = [
-  { label: "About", href: "#about" },
-  { label: "Experience", href: "#experience" },
-  { label: "Skills", href: "#skills" },
-  { label: "Projects", href: "#projects" },
-  { label: "Certifications", href: "#certifications" },
-  { label: "Contact", href: "#contact" },
-];
+const { nav } = siteContent;
 ---
 
-<header id="site-nav" role="banner">
-  <nav aria-label="Main navigation">
-    <div class="nav-inner">
-      <!-- Logo / Wordmark -->
-      <a href="#home" class="nav-logo" aria-label="Christopher Corbin, home">
-        {siteContent.meta.siteName}
-      </a>
+<nav
+  id="site-nav"
+  class="sticky top-0 z-50 border-b border-line bg-[rgba(12,16,21,0.9)] font-mono backdrop-blur-[10px]"
+>
+  <div class="mx-auto flex max-w-[1200px] items-center justify-between gap-4 px-8 py-3.5 max-[720px]:relative">
+    <a href="#top" class="flex items-center gap-3.5" aria-label={`${nav.prompt} — back to top`}>
+      <span class="flex gap-[7px]" aria-hidden="true">
+        <span class="h-[11px] w-[11px] rounded-full bg-tl-red"></span>
+        <span class="h-[11px] w-[11px] rounded-full bg-tl-yellow"></span>
+        <span class="h-[11px] w-[11px] rounded-full bg-tl-green"></span>
+      </span>
+      <span class="text-[13px] text-faint max-[720px]:hidden">{nav.prompt}</span>
+    </a>
 
-      <!-- Desktop links -->
-      <ul class="nav-links" role="list">
-        {navLinks.map((link) => (
-          <li>
-            <a href={link.href} class="nav-link">{link.label}</a>
-          </li>
-        ))}
-      </ul>
+    <button
+      id="nav-burger"
+      aria-label="Toggle menu"
+      aria-expanded="false"
+      class="hidden cursor-pointer rounded-md border border-line-2 bg-transparent px-[11px] py-[5px] font-mono text-lg leading-none text-body max-[720px]:inline-flex"
+    >≡</button>
 
-      <!-- Resume CTA button -->
+    <div
+      id="nav-links"
+      class="flex flex-wrap items-center gap-6 text-[13px] max-[720px]:absolute max-[720px]:inset-x-0 max-[720px]:top-full max-[720px]:hidden max-[720px]:flex-col max-[720px]:items-stretch max-[720px]:gap-0.5 max-[720px]:border-b max-[720px]:border-line max-[720px]:bg-[rgba(10,13,17,0.98)] max-[720px]:px-8 max-[720px]:pb-4 max-[720px]:pt-2 max-[720px]:[&.open]:flex"
+    >
+      {nav.links.map((link) => (
+        <a
+          href={link.href}
+          data-nav
+          class="text-muted-2 transition-colors hover:text-accent max-[720px]:border-b max-[720px]:border-[#14191f] max-[720px]:py-2.5"
+        >{link.label}</a>
+      ))}
       <a
-        href="/assets/Christopher_Corbin_Resume.pdf"
-        download
-        class="nav-resume"
-        aria-label="Download resume PDF"
-      >
-        <Icon name="file-arrow-down" /> Resume
-      </a>
-
-      <!-- Mobile hamburger -->
-      <button
-        id="nav-toggle"
-        class="nav-hamburger"
-        aria-label="Open navigation menu"
-        aria-expanded="false"
-        aria-controls="mobile-menu"
-      >
-        <span class="bar"></span>
-        <span class="bar"></span>
-        <span class="bar"></span>
-      </button>
+        href={nav.resume.href}
+        class="rounded-[5px] border border-accent px-3 py-[3px] text-accent transition-colors hover:bg-accent hover:text-page max-[720px]:mt-2 max-[720px]:self-start"
+      >{nav.resume.label}</a>
     </div>
-
-    <!-- Mobile menu -->
-    <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
-      <ul role="list">
-        {navLinks.map((link) => (
-          <li>
-            <a href={link.href} class="mobile-link">{link.label}</a>
-          </li>
-        ))}
-        <li>
-          <a
-            href="/assets/Christopher_Corbin_Resume.pdf"
-            download
-            class="mobile-link mobile-resume-link"
-          >
-            <Icon name="file-arrow-down" /> Download Resume
-          </a>
-        </li>
-      </ul>
-    </div>
-  </nav>
-</header>
-
-<style>
-  header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-    transition: box-shadow 0.3s ease, border-color 0.3s ease;
-  }
-
-  header.scrolled {
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.08);
-    border-bottom-color: rgba(0, 0, 0, 0.12);
-  }
-
-  .nav-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 20px;
-    height: 70px;
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-  }
-
-  /* Logo */
-  .nav-logo {
-    font-size: 1.375rem;
-    font-weight: 700;
-    color: var(--color-secondary);
-    flex-shrink: 0;
-    transition: color 0.3s ease;
-  }
-
-  .nav-logo:hover {
-    color: var(--color-primary);
-  }
-
-  /* Desktop nav links */
-  .nav-links {
-    display: none;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    gap: 0.25rem;
-    flex: 1;
-  }
-
-  @media (min-width: 900px) {
-    .nav-links {
-      display: flex;
-      align-items: center;
-    }
-  }
-
-  .nav-link {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    padding: 0.4rem 0.75rem;
-    transition: color 0.3s ease;
-    position: relative;
-  }
-
-  .nav-link::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 2px;
-    bottom: -2px;
-    left: 0.75rem;
-    right: 0.75rem;
-    background: var(--color-primary);
-    transition: width 0.3s ease;
-  }
-
-  .nav-link:hover {
-    color: var(--color-primary);
-  }
-
-  .nav-link:hover::after {
-    width: calc(100% - 1.5rem);
-  }
-
-  /* Resume CTA */
-  .nav-resume {
-    margin-left: auto;
-    display: none;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: white;
-    background: var(--color-primary);
-    padding: 0.5rem 1.25rem;
-    border-radius: 8px;
-    flex-shrink: 0;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
-  }
-
-  .nav-resume:hover {
-    background: #e68900;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(255, 153, 0, 0.4);
-  }
-
-  @media (min-width: 640px) {
-    .nav-resume {
-      display: inline-flex;
-    }
-  }
-
-  /* Hamburger */
-  .nav-hamburger {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    margin-left: auto;
-  }
-
-  @media (min-width: 900px) {
-    .nav-hamburger {
-      display: none;
-    }
-  }
-
-  .bar {
-    display: block;
-    width: 25px;
-    height: 3px;
-    background: var(--color-secondary);
-    border-radius: 2px;
-    transition: transform 0.3s ease, opacity 0.3s ease;
-    transform-origin: center;
-  }
-
-  .nav-hamburger[aria-expanded="true"] .bar:nth-child(1) {
-    transform: translateY(8px) rotate(45deg);
-  }
-  .nav-hamburger[aria-expanded="true"] .bar:nth-child(2) {
-    opacity: 0;
-    transform: scaleX(0);
-  }
-  .nav-hamburger[aria-expanded="true"] .bar:nth-child(3) {
-    transform: translateY(-8px) rotate(-45deg);
-  }
-
-  /* Mobile menu */
-  .mobile-menu {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.4s ease;
-    background: white;
-    border-top: 1px solid transparent;
-  }
-
-  .mobile-menu[aria-hidden="false"] {
-    max-height: 480px;
-    border-top-color: rgba(0, 0, 0, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  }
-
-  .mobile-menu ul {
-    list-style: none;
-    margin: 0;
-    padding: 1rem 20px 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .mobile-link {
-    display: block;
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--color-text-primary);
-    padding: 0.75rem 0;
-    border-bottom: 1px solid #f0f0f0;
-    transition: color 0.2s;
-  }
-
-  .mobile-link:hover {
-    color: var(--color-primary);
-  }
-
-  .mobile-resume-link {
-    color: var(--color-primary);
-    font-weight: 600;
-    border-bottom: none;
-    padding-top: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-</style>
+  </div>
+</nav>
 
 <script>
-  const header = document.getElementById("site-nav")!;
-  const toggle = document.getElementById("nav-toggle")!;
-  const mobileMenu = document.getElementById("mobile-menu")!;
-
-  // Scroll shadow
-  const onScroll = () => {
-    header.classList.toggle("scrolled", window.scrollY > 20);
-  };
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
-
-  // Hamburger toggle
-  toggle.addEventListener("click", () => {
-    const isOpen = toggle.getAttribute("aria-expanded") === "true";
-    toggle.setAttribute("aria-expanded", String(!isOpen));
-    mobileMenu.setAttribute("aria-hidden", String(isOpen));
-  });
-
-  // Close on link click
-  mobileMenu.querySelectorAll("a").forEach((link) => {
-    link.addEventListener("click", () => {
-      toggle.setAttribute("aria-expanded", "false");
-      mobileMenu.setAttribute("aria-hidden", "true");
+  // Mobile hamburger menu
+  const burger = document.getElementById("nav-burger");
+  const links = document.getElementById("nav-links");
+  if (burger && links) {
+    burger.addEventListener("click", () => {
+      const open = links.classList.toggle("open");
+      burger.textContent = open ? "✕" : "≡";
+      burger.setAttribute("aria-expanded", String(open));
     });
+    links.querySelectorAll("a").forEach((a) =>
+      a.addEventListener("click", () => {
+        links.classList.remove("open");
+        burger.textContent = "≡";
+        burger.setAttribute("aria-expanded", "false");
+      })
+    );
+  }
+
+  // Scroll-spy: the nav link for the section in view turns orange/bold
+  const navLinks = [...document.querySelectorAll<HTMLAnchorElement>("#site-nav a[data-nav]")];
+  const map: Record<string, HTMLAnchorElement> = {};
+  navLinks.forEach((a) => {
+    const id = a.getAttribute("href")?.slice(1);
+    if (id) map[id] = a;
+  });
+  const clear = () =>
+    navLinks.forEach((a) => {
+      a.style.color = "";
+      a.style.fontWeight = "";
+    });
+  const io = new IntersectionObserver(
+    (entries) => {
+      const vis = entries
+        .filter((e) => e.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+      if (vis[0]) {
+        clear();
+        const a = map[vis[0].target.id];
+        if (a) {
+          a.style.color = "#ff9900";
+          a.style.fontWeight = "700";
+        }
+      }
+    },
+    { rootMargin: "-45% 0px -50% 0px", threshold: [0, 0.25, 0.5] }
+  );
+  Object.keys(map).forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) io.observe(el);
   });
 </script>

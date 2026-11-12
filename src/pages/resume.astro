@@ -1,592 +1,203 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
-import { siteContent } from "../data/content";
+import ResumeHeading from "../components/ResumeHeading.astro";
+import { resumeContent as r } from "../data/content";
 
-const { contact, about, experience, skills, certifications } = siteContent;
+const sec = r.sections;
+
 const description =
-  "Resume of Christopher Corbin, AWS Solutions Architect & Security Engineer specializing in secure cloud architectures, DevOps automation, and SOC 2 compliance.";
+  "Résumé of Christopher Corbin — DevOps & Cloud Engineer. CI/CD, infrastructure as code, and zero-downtime deploys for public-sector digital services.";
 ---
 
-<BaseLayout title="Christopher Corbin | Resume" description={description}>
-  <div class="resume-page print:bg-white print:px-0 print:py-0">
+<BaseLayout title={r.title} description={description}>
+  <div class="resume-backdrop">
+    <!-- screen-only toolbar -->
+    <div class="toolbar print:hidden">
+      <a href="/" class="toolbar-link">← back to site</a>
+      <button id="print-btn" class="toolbar-btn" type="button">print / save as PDF ↓</button>
+    </div>
 
-    <!-- ── HEADER ──────────────────────────────────────────────────── -->
-    <header class="resume-header print:mb-4">
-      <div class="header-top print:flex print:items-end print:justify-between">
+    <div class="sheet">
+      <!-- header -->
+      <header class="flex items-end justify-between gap-6 border-b-[3px] border-r-ink pb-3.5">
         <div>
-          <h1 class="resume-name print:text-3xl">Christopher Corbin</h1>
-          <p class="resume-subtitle print:text-sm">
-            AWS Solutions Architect &amp; Security Engineer
-          </p>
+          <div class="mono mb-1.5 text-[11px] text-r-accent">$ whoami</div>
+          <h1 class="mono m-0 text-[34px] font-bold leading-none tracking-[-0.02em] text-r-ink">
+            {r.name}<span class="text-r-accent">.</span>
+          </h1>
+          <div class="mt-2 text-[12.5px] text-[#4a5561]">{r.tagline}</div>
         </div>
+        <div class="mono whitespace-nowrap text-right text-[10.5px] leading-[1.55] text-[#4a5561]">
+          {r.contactLines.map((line) => <div>{line}</div>)}
+          <div class="text-r-accent">{r.location}</div>
+        </div>
+      </header>
 
-        <!-- Download button — hidden on print -->
-        <a
-          href="/assets/Christopher_Corbin_Resume.pdf"
-          download
-          class="download-btn print:hidden"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          Download PDF
-        </a>
-      </div>
+      <!-- summary -->
+      <p class="mb-0 mt-3 text-[12.5px] leading-[1.6] text-r-body">{r.summary}</p>
 
-      <!-- Orange accent rule -->
-      <div class="header-rule print:bg-black/20"></div>
-
-      <!-- Contact row -->
-      <div class="contact-row print:text-[10px]">
-        <a href={`mailto:${contact.email}`} class="contact-item print:text-gray-700">
-          {contact.email}
-        </a>
-        <span class="contact-item">{contact.phone}</span>
-        <span class="contact-item">{contact.location}</span>
-        {contact.socials.github && (
-          <a
-            href={contact.socials.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="contact-item print:text-gray-700"
-          >
-            {contact.socials.github.replace("https://", "")}
-          </a>
-        )}
-      </div>
-    </header>
-
-    <!-- ── TWO-COLUMN BODY ─────────────────────────────────────────── -->
-    <div class="resume-body print:gap-x-6">
-
-      <!-- ── LEFT SIDEBAR ──────────────────────────────────────────── -->
-      <aside class="sidebar print:space-y-4">
-
-        <!-- Summary -->
-        <section class="sidebar-section">
-          <h2 class="sidebar-heading print:text-[9px]">Summary</h2>
-          <div class="sidebar-rule print:bg-black/20"></div>
-          <div class="sidebar-text print:text-[10px] print:text-gray-700">
-            {about.bio.split("\n\n").map((para) => (
-              <p>{para}</p>
-            ))}
+      <!-- experience -->
+      <ResumeHeading {...sec.experience} />
+      {r.experience.map((job, i) => (
+        <div class:list={[i < r.experience.length - 1 ? "mb-2.5" : "mb-1"]}>
+          <div class="flex items-baseline justify-between gap-4">
+            <div class="text-sm font-bold text-r-ink">{job.role}</div>
+            <div class="mono text-[10.5px] text-r-muted">{job.dates}</div>
           </div>
-        </section>
-
-        <!-- Skills -->
-        <section class="sidebar-section">
-          <h2 class="sidebar-heading print:text-[9px]">Skills</h2>
-          <div class="sidebar-rule print:bg-black/20"></div>
-          <div class="skills-list print:space-y-2">
-            {skills.map((skillGroup) => (
-              <div class="skill-group print:break-inside-avoid">
-                <p class="skill-category-label print:text-[8px]">{skillGroup.category}</p>
-                <p class="skill-items print:text-[10px] print:text-gray-700">
-                  {skillGroup.items.join(" · ")}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <!-- Certifications -->
-        <section class="sidebar-section">
-          <h2 class="sidebar-heading print:text-[9px]">Certifications</h2>
-          <div class="sidebar-rule print:bg-black/20"></div>
-          <div class="cert-list print:space-y-2">
-            {certifications.badges.map((cert) => (
-              <div class="cert-item print:break-inside-avoid">
-                <p class="cert-name print:text-[10px] print:text-black">
-                  {cert.name}
-                  {cert.inProgress && (
-                    <span class="cert-inprogress print:text-[9px]">(in progress)</span>
-                  )}
-                </p>
-                <p class="cert-meta print:text-[9px] print:text-gray-600">
-                  {cert.issuer}
-                  {cert.year && <span class="cert-year"> · {cert.year}</span>}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-      </aside>
-
-      <!-- ── RIGHT MAIN COLUMN ──────────────────────────────────────── -->
-      <main class="main-col">
-        <h2 class="section-heading print:text-[9px]">Experience</h2>
-        <div class="main-rule print:bg-black/20"></div>
-
-        <div class="experience-list print:space-y-4">
-          {experience.map((job) => (
-            <article class="job-item print:break-inside-avoid">
-              <!-- Company + meta -->
-              <div class="job-header">
-                <h3 class="job-company print:text-base print:text-black">{job.company}</h3>
-                <div class="job-meta-row">
-                  <span class="job-role print:text-xs print:text-gray-700">{job.role}</span>
-                  <span class="job-dates print:text-[10px] print:text-gray-500">
-                    {job.dates} &middot; {job.location}
-                  </span>
-                </div>
-              </div>
-
-              <div class="job-rule print:bg-black/15"></div>
-
-              <!-- Bullets -->
-              <ul class="job-bullets print:space-y-1">
-                {job.bullets.map((bullet) => (
-                  <li class="job-bullet print:text-[10.5px] print:text-gray-700">
-                    <span class="bullet-dot print:bg-black/40" aria-hidden="true"></span>
-                    <span>{bullet}</span>
-                  </li>
-                ))}
+          {job.bullets.length === 1 ? (
+            <div class="mt-0.5 text-xs leading-[1.5] text-r-body">
+              <span class="mono text-[11px] text-r-accent">{job.company}</span> · {job.bullets[0]}
+            </div>
+          ) : (
+            <>
+              <div class="mono mb-[5px] mt-0.5 text-[11px] text-r-accent">{job.company}</div>
+              <ul class="m-0 list-disc pl-[18px] text-xs leading-[1.5] text-r-body">
+                {job.bullets.map((b) => <li>{b}</li>)}
               </ul>
-
-              <!-- Tech tags -->
-              <div class="job-tech">
-                {job.tech.map((tag) => (
-                  <span class="tech-tag print:border-black/20 print:text-gray-600">{tag}</span>
-                ))}
-              </div>
-            </article>
-          ))}
+            </>
+          )}
         </div>
-      </main>
+      ))}
 
+      <!-- selected projects -->
+      <ResumeHeading {...sec.projects} />
+      <div class="mb-1 grid grid-cols-2 gap-x-[26px] gap-y-2.5">
+        {r.projects.map((p) => (
+          <div>
+            <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+              <div class="text-[12.5px] font-bold text-r-ink">{p.title}</div>
+              {p.url && <a href={`https://${p.url}`} class="mono text-[10.5px] text-r-accent">{p.url}</a>}
+            </div>
+            <div class="mt-[3px] text-[11.5px] leading-[1.5] text-[#3a434d]">{p.description}</div>
+          </div>
+        ))}
+      </div>
+
+      <!-- skills -->
+      <ResumeHeading {...sec.skills} />
+      <div class="mb-1 grid grid-cols-[150px_1fr] gap-x-4 gap-y-1.5 text-xs leading-[1.5]">
+        {r.skills.map((row) => (
+          <>
+            <div class="mono text-[11px] text-r-accent">{row.key}</div>
+            <div class="text-r-body">{row.value}</div>
+          </>
+        ))}
+      </div>
+
+      <!-- certifications + education -->
+      <div class="mt-3.5 grid grid-cols-2 gap-[26px]">
+        <div>
+          <ResumeHeading {...sec.certifications} class="!mt-0" />
+          <ul class="m-0 list-disc pl-[18px] text-xs leading-[1.6] text-r-body">
+            {r.certifications.map((c, i) => (
+              <li class:list={[i === r.certifications.length - 1 && "text-r-accent"]}>{c}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <ResumeHeading {...sec.education} class="!mt-0" />
+          <div class="text-[13px] font-bold text-r-ink">{r.education.degree}</div>
+          <div class="mono mt-0.5 text-[11px] text-r-accent">{r.education.school}</div>
+        </div>
+      </div>
     </div>
-
-    <!-- Footer (screen only) -->
-    <div class="resume-footer print:hidden">
-      <div class="footer-rule"></div>
-      <p class="footer-text">christophercorbin.cloud</p>
-    </div>
-
   </div>
 </BaseLayout>
 
+<script>
+  document.getElementById("print-btn")?.addEventListener("click", () => window.print());
+</script>
+
 <style>
-  /* Screen layout */
-  .resume-page {
+  .resume-backdrop {
     min-height: 100vh;
-    background: #f8f9fa;
-    padding: 2.5rem 1.5rem;
+    background: #3a3d42;
+    padding: 28px 16px 56px;
   }
 
-  @media (min-width: 768px) {
-    .resume-page {
-      padding: 3.5rem 3rem;
-    }
-  }
-
-  /* Header */
-  .resume-header {
-    max-width: 960px;
-    margin: 0 auto 2rem;
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-  }
-
-  .header-top {
+  .toolbar {
+    max-width: 816px;
+    margin: 0 auto 16px;
     display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    margin-bottom: 1.25rem;
-  }
-
-  @media (min-width: 640px) {
-    .header-top {
-      flex-direction: row;
-      align-items: flex-end;
-      justify-content: space-between;
-    }
-  }
-
-  .resume-name {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #232f3e;
-    line-height: 1;
-    margin-bottom: 0.375rem;
-  }
-
-  .resume-subtitle {
-    font-size: 1rem;
-    color: #666;
-    font-weight: 400;
-  }
-
-  .download-btn {
-    display: inline-flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
-    background: #ff9900;
-    color: white;
-    font-size: 0.875rem;
-    font-weight: 600;
-    padding: 0.6rem 1.25rem;
-    border-radius: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(255, 153, 0, 0.3);
-    white-space: nowrap;
-    align-self: flex-start;
+    gap: 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
   }
 
-  .download-btn:hover {
-    background: #e68900;
+  .toolbar-link {
+    color: #b6c0cb;
+    transition: color 0.15s ease;
+  }
+
+  .toolbar-link:hover {
+    color: #ff9900;
+  }
+
+  .toolbar-btn {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: #0a0d11;
+    background: #ff9900;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .toolbar-btn:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(255, 153, 0, 0.4);
+    box-shadow: 0 10px 26px rgba(255, 153, 0, 0.32);
   }
 
-  .header-rule {
-    height: 3px;
-    background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-    border-radius: 2px;
-    margin-bottom: 1rem;
-  }
-
-  .contact-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem 1.5rem;
-    font-size: 0.8125rem;
-    color: #666;
-  }
-
-  .contact-item {
-    color: #666;
-    text-decoration: none;
-    transition: color 0.2s;
-  }
-
-  .contact-item:hover {
-    color: #ff9900;
-  }
-
-  /* Body grid */
-  .resume-body {
-    max-width: 960px;
+  /* US-Letter sheet */
+  .sheet {
+    max-width: 816px;
+    min-height: 1056px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  @media (min-width: 768px) {
-    .resume-body {
-      grid-template-columns: 260px 1fr;
-      gap: 2rem;
-      align-items: start;
-    }
-  }
-
-  /* Sidebar */
-  .sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: 1.75rem;
-  }
-
-  .sidebar-section {
     background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+    color: var(--color-r-body);
+    font-family: var(--font-body);
+    padding: 0.55in;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
   }
 
-  .sidebar-heading {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: #ff9900;
-    margin-bottom: 0.5rem;
+  .mono {
+    font-family: var(--font-mono);
   }
 
-  .sidebar-rule {
-    height: 2px;
-    background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-    border-radius: 1px;
-    margin-bottom: 1rem;
-  }
-
-  .sidebar-text {
-    font-size: 0.8125rem;
-    color: #666;
-    line-height: 1.65;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  /* Skills */
-  .skills-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .skill-group {
-    padding: 0;
-  }
-
-  .skill-category-label {
-    font-size: 0.625rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: #999;
-    margin-bottom: 0.25rem;
-  }
-
-  .skill-items {
-    font-size: 0.8125rem;
-    color: #666;
-    line-height: 1.6;
-  }
-
-  /* Cert list */
-  .cert-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.875rem;
-  }
-
-  .cert-item {
-    padding: 0;
-  }
-
-  .cert-name {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    color: #232f3e;
-    line-height: 1.3;
-    margin-bottom: 0.2rem;
-  }
-
-  .cert-inprogress {
-    color: #ff9900;
-    font-weight: 400;
-    font-size: 0.75rem;
-    margin-left: 0.25rem;
-  }
-
-  .cert-meta {
-    font-size: 0.75rem;
-    color: #999;
-  }
-
-  .cert-year {
-    color: #bbb;
-  }
-
-  /* Main column */
-  .main-col {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
-  }
-
-  .section-heading {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: #ff9900;
-    margin-bottom: 0.5rem;
-  }
-
-  .main-rule {
-    height: 2px;
-    background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-    border-radius: 1px;
-    margin-bottom: 1.5rem;
-  }
-
-  /* Experience */
-  .experience-list {
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-  }
-
-  .job-item {
-    padding: 0;
-  }
-
-  .job-header {
-    margin-bottom: 0.75rem;
-  }
-
-  .job-company {
-    font-size: 1.125rem;
-    font-weight: 700;
-    color: #232f3e;
-    line-height: 1.2;
-    margin-bottom: 0.25rem;
-  }
-
-  .job-meta-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 0.5rem 1rem;
-  }
-
-  .job-role {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #555;
-  }
-
-  .job-dates {
-    font-size: 0.8125rem;
-    color: #999;
-  }
-
-  .job-rule {
-    height: 1px;
-    background: #e9ecef;
-    margin-bottom: 0.875rem;
-  }
-
-  /* Bullets */
-  .job-bullets {
-    list-style: none;
-    padding: 0;
-    margin: 0 0 0.875rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .job-bullet {
-    display: flex;
-    gap: 0.625rem;
-    font-size: 0.875rem;
-    color: #555;
-    line-height: 1.55;
-    align-items: flex-start;
-  }
-
-  .bullet-dot {
-    margin-top: 0.5rem;
-    flex-shrink: 0;
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: #ff9900;
-  }
-
-  /* Tech tags */
-  .job-tech {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.375rem;
-  }
-
-  .tech-tag {
-    display: inline-block;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: #555;
-    padding: 0.2rem 0.6rem;
-    border: 1px solid #dee2e6;
-    border-radius: 10px;
-    background: #f8f9fa;
-    cursor: default;
-  }
-
-  /* Footer */
-  .resume-footer {
-    max-width: 960px;
-    margin: 2rem auto 0;
-  }
-
-  .footer-rule {
-    height: 1px;
-    background: #e9ecef;
-    margin-bottom: 1rem;
-  }
-
-  .footer-text {
-    font-size: 0.8rem;
-    color: #999;
-    text-align: center;
-  }
-
-  /* ── PRINT STYLES ─────────────────────────────────────────────── */
+  /* Print: just the sheet, no chrome */
   @media print {
     @page {
-      margin: 0.65in;
       size: letter;
+      margin: 0.35in 0.4in;
     }
 
-    body {
+    :global(body) {
       background: white !important;
-      font-size: 11px;
+    }
+
+    .resume-backdrop {
+      background: white;
+      padding: 0;
+    }
+
+    .toolbar {
+      display: none;
+    }
+
+    .sheet {
+      max-width: none;
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+      zoom: 0.84;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
-    }
-
-    .resume-page {
-      background: white !important;
-      padding: 0 !important;
-    }
-
-    .resume-header {
-      background: white !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      padding: 0 0 0.75rem !important;
-      margin-bottom: 0.75rem !important;
-    }
-
-    .resume-body {
-      gap: 0.625rem;
-    }
-
-    .sidebar-section {
-      background: white !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-      margin-bottom: 0.75rem;
-    }
-
-    .main-col {
-      background: white !important;
-      border-radius: 0 !important;
-      box-shadow: none !important;
-      padding: 0 !important;
-    }
-
-    .experience-list {
-      gap: 1rem;
-    }
-
-    .sidebar-rule,
-    .main-rule,
-    .header-rule {
-      height: 1px !important;
-      background: #ccc !important;
     }
   }
 </style>

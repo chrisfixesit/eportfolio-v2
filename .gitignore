@@ -50,3 +50,8 @@ Thumbs.db
 .amplify/
 amplify_outputs.json
 amplifyconfiguration*.json
+
+# local previews / scratch
+preview/
+preview-new/
+_to_delete/

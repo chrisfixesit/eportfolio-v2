@@ -1,296 +1,61 @@
 ---
 import { siteContent } from "../data/content";
-import Icon from "./Icon.astro";
-import type { IconName } from "./icon-names";
+import SectionPrompt from "./SectionPrompt.astro";
 
 const { experience } = siteContent;
 
-const roleIcons: IconName[] = ["building-columns", "cloud", "route", "apple-whole"];
+// Bullets shown up front per role; the rest sit behind a native <details> toggle
+const VISIBLE = 2;
+
+const dotClasses: Record<string, string> = {
+  accent: "bg-accent shadow-[0_0_0_4px_rgba(255,153,0,0.15)]",
+  green: "bg-surface border-2 border-green",
+  gray: "bg-surface border-2 border-line-2",
+};
 ---
 
-<section id="experience" class="experience-section" aria-labelledby="experience-heading">
-  <div class="site-container">
-    <h2 id="experience-heading" class="section-title reveal">Professional Experience</h2>
-
-    <div class="timeline">
-      {experience.map((role, i) => (
-        <div class:list={["timeline-item", "reveal", `reveal-delay-${Math.min(i + 1, 6)}`]}>
-          <!-- Timeline marker -->
-          <div class="timeline-marker" aria-hidden="true">
-            <div class="timeline-icon">
-              <Icon name={roleIcons[i] ?? "building-columns"} />
-            </div>
-          </div>
-
-          <!-- Content card -->
-          <div class="timeline-content">
-            <div class="timeline-period">{role.dates}</div>
-            <h3 class="role-title">{role.role}</h3>
-            <h4 class="role-company">{role.company} &mdash; {role.location}</h4>
-
-            <ul class="role-bullets" aria-label={`Responsibilities at ${role.company}`}>
-              {role.bullets.map((bullet) => (
-                <li class="role-bullet">
-                  <Icon name="check" />
-                  <span>{bullet}</span>
-                </li>
-              ))}
-            </ul>
-
-            <div class="role-tech" aria-label={`Technologies at ${role.company}`}>
-              {role.tech.map((t) => (
-                <span class="tech-tag">{t}</span>
-              ))}
-            </div>
-          </div>
+<section id="experience" class="px-11 pb-[52px] pt-2 max-[920px]:px-[22px]">
+  <SectionPrompt title={experience.title} path={experience.path} cmd={experience.cmd} class="mb-[26px]" />
+  <div class="flex flex-col">
+    {experience.entries.map((entry, i) => (
+      <div class="grid grid-cols-[24px_1fr] gap-5">
+        <div class="flex flex-col items-center" aria-hidden="true">
+          <span class:list={["h-[13px] w-[13px] rounded-full", dotClasses[entry.dot]]}></span>
+          {i < experience.entries.length - 1 && <span class="w-0.5 flex-1 bg-line"></span>}
         </div>
-      ))}
-    </div>
+        <div class:list={[i < experience.entries.length - 1 && "pb-6"]}>
+          <div class="flex justify-between gap-4 max-[560px]:flex-col max-[560px]:gap-1">
+            <h3 class="text-[19px] font-semibold text-ink">{entry.role}</h3>
+            <div class="font-mono text-[13px] text-faint">{entry.dates}</div>
+          </div>
+          <div class:list={["mb-2.5 mt-1 font-mono text-sm", i === 0 ? "text-accent" : "text-body"]}>
+            {entry.company}{entry.note && <span class="text-faint"> · {entry.note}</span>}
+          </div>
+          <ul class="m-0 grid list-none gap-1.5 p-0 text-[15px] leading-relaxed text-muted">
+            {entry.bullets.slice(0, VISIBLE).map((b) => (
+              <li class="grid grid-cols-[14px_1fr] gap-1.5">
+                <span class="font-mono text-faint" aria-hidden="true">▸</span><span>{b}</span>
+              </li>
+            ))}
+          </ul>
+          {entry.bullets.length > VISIBLE && (
+            <details class="group mt-3">
+              <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 font-mono text-[13px] font-medium text-accent transition-colors hover:border-accent hover:bg-accent/20 focus-visible:border-accent [&::-webkit-details-marker]:hidden">
+                <span class="inline-block transition-transform group-open:rotate-90" aria-hidden="true">▸</span>
+                <span class="group-open:hidden">show {entry.bullets.length - VISIBLE} more</span>
+                <span class="hidden group-open:inline">show less</span>
+              </summary>
+              <ul class="m-0 mt-1.5 grid list-none gap-1.5 p-0 text-[15px] leading-relaxed text-muted">
+                {entry.bullets.slice(VISIBLE).map((b) => (
+                  <li class="grid grid-cols-[14px_1fr] gap-1.5">
+                    <span class="font-mono text-faint" aria-hidden="true">▸</span><span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
+      </div>
+    ))}
   </div>
 </section>
-
-<style>
-  .experience-section {
-    padding: 6rem 0;
-    background: var(--color-bg-secondary);
-  }
-
-  /* Timeline */
-  .timeline {
-    position: relative;
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 2rem 0;
-  }
-
-  /* Center vertical line */
-  .timeline::before {
-    content: '';
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 100%;
-    background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-    border-radius: 2px;
-    top: 0;
-  }
-
-  .timeline-item {
-    display: flex;
-    align-items: flex-start;
-    margin-bottom: 3rem;
-    position: relative;
-  }
-
-  .timeline-item:nth-child(odd) {
-    flex-direction: row;
-  }
-
-  .timeline-item:nth-child(even) {
-    flex-direction: row-reverse;
-  }
-
-  /* Center marker */
-  .timeline-marker {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 10;
-  }
-
-  .timeline-icon {
-    width: 56px;
-    height: 56px;
-    background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 1.3rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border: 4px solid white;
-    transition: all 0.3s ease;
-  }
-
-  .timeline-icon:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 20px rgba(255, 153, 0, 0.3);
-  }
-
-  /* Content card */
-  .timeline-content {
-    background: white;
-    border-radius: 12px;
-    padding: 2rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    width: calc(50% - 44px);
-    position: relative;
-    transition: all 0.3s ease;
-  }
-
-  .timeline-content:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
-  }
-
-  .timeline-item:nth-child(odd) .timeline-content {
-    margin-right: auto;
-  }
-
-  .timeline-item:nth-child(even) .timeline-content {
-    margin-left: auto;
-  }
-
-  /* Arrow connector */
-  .timeline-item:nth-child(odd) .timeline-content::after {
-    content: '';
-    position: absolute;
-    right: -15px;
-    top: 28px;
-    width: 0;
-    height: 0;
-    border: 15px solid transparent;
-    border-left-color: white;
-  }
-
-  .timeline-item:nth-child(even) .timeline-content::after {
-    content: '';
-    position: absolute;
-    left: -15px;
-    top: 28px;
-    width: 0;
-    height: 0;
-    border: 15px solid transparent;
-    border-right-color: white;
-  }
-
-  .timeline-period {
-    display: inline-block;
-    background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-    color: white;
-    padding: 0.35rem 1rem;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .role-title {
-    color: var(--color-secondary);
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 0.35rem;
-    line-height: 1.3;
-  }
-
-  .role-company {
-    color: var(--color-text-secondary);
-    font-size: 0.95rem;
-    font-weight: 400;
-    margin-bottom: 1.25rem;
-    font-style: italic;
-  }
-
-  /* Bullets */
-  .role-bullets {
-    list-style: none;
-    margin: 0 0 1.25rem;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .role-bullet {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.7rem;
-    background: rgba(248, 249, 250, 0.5);
-    border-radius: 8px;
-    border-left: 3px solid var(--color-primary);
-    transition: all 0.3s ease;
-  }
-
-  .role-bullet:hover {
-    background: rgba(255, 153, 0, 0.05);
-    transform: translateX(4px);
-  }
-
-  .role-bullet :global(.icon) {
-    color: var(--color-primary);
-    height: 0.75em;
-    margin-top: 0.35rem;
-  }
-
-  .role-bullet span {
-    color: var(--color-text-secondary);
-    line-height: 1.5;
-    font-size: 0.9rem;
-  }
-
-  /* Tech tags */
-  .role-tech {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
-  }
-
-  .tech-tag {
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 0.3rem 0.8rem;
-    border-radius: 15px;
-    font-size: 0.8rem;
-    color: var(--color-text-primary);
-    font-weight: 500;
-    transition: all 0.3s ease;
-    cursor: default;
-  }
-
-  .tech-tag:hover {
-    background: linear-gradient(135deg, #ff9900 0%, #146eb4 100%);
-    color: white;
-    transform: translateY(-2px);
-  }
-
-  /* Responsive: mobile stacked timeline */
-  @media (max-width: 768px) {
-    .timeline::before {
-      left: 28px;
-    }
-
-    .timeline-item {
-      flex-direction: row !important;
-      margin-left: 56px;
-    }
-
-    .timeline-marker {
-      left: 28px !important;
-      transform: translateX(-50%);
-    }
-
-    .timeline-icon {
-      width: 48px;
-      height: 48px;
-      font-size: 1.1rem;
-    }
-
-    .timeline-content {
-      width: 100% !important;
-      margin: 0 !important;
-    }
-
-    .timeline-item:nth-child(odd) .timeline-content::after,
-    .timeline-item:nth-child(even) .timeline-content::after {
-      left: -15px !important;
-      right: auto !important;
-      border: 15px solid transparent !important;
-      border-right-color: white !important;
-    }
-  }
-</style>

@@ -1,0 +1,20 @@
+---
+import { siteContent } from "../data/content";
+
+const { dora } = siteContent;
+---
+
+<div class="border-b border-line bg-band px-11 py-[30px] max-[920px]:px-[22px]">
+  <div class="mb-5 font-mono text-xs text-faint">
+    {dora.label} <span class="text-ghost" aria-hidden="true">{dora.labelComment}</span>
+  </div>
+  <div class="grid grid-cols-4 gap-px overflow-hidden rounded-[10px] border border-line bg-line max-[920px]:grid-cols-2">
+    {dora.cells.map((cell) => (
+      <div class="bg-surface px-[22px] py-5">
+        <div class="font-mono text-xs lowercase text-faint"># {cell.label}</div>
+        <div class:list={["mt-2 font-mono text-3xl font-extrabold", cell.green ? "text-green" : "text-ink"]}>{cell.value}</div>
+        <div class="mt-1.5 text-[12.5px] text-muted-2">{cell.caption}</div>
+      </div>
+    ))}
+  </div>
+</div>
