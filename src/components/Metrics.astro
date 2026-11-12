@@ -1,18 +1,18 @@
 ---
 import { siteContent } from "../data/content";
 
-const { saved, cells } = siteContent.metrics;
+const { saved, ci, cve } = siteContent.metrics;
+const ciAfterPct = ((ci.to / ci.from) * 100).toFixed(1);
 ---
 
 <div class="grid grid-cols-[1.5fr_1fr] border-y border-line max-[920px]:grid-cols-1">
   <!-- dominant cell: cloud spend saved + sparkline -->
   <div class="relative flex flex-col border-r border-line px-11 py-9 max-[920px]:border-r-0 max-[920px]:border-b">
     <div class="absolute left-0 top-0 h-full w-[3px] bg-accent" aria-hidden="true"></div>
-    <div class="font-mono text-[13px] tracking-[0.06em] text-faint">{saved.label}</div>
+    <div class="font-mono text-[13px] text-faint">{saved.label}</div>
     <div
       id="metric-saved"
-      class="mt-2 font-mono text-[74px] font-extrabold leading-none tracking-[-0.03em] text-accent max-[920px]:text-[62px] max-[560px]:text-[52px]"
-      data-countup
+      class="mt-2 font-mono text-[62px] font-extrabold leading-none tracking-[-0.03em] text-accent max-[920px]:text-[54px] max-[560px]:text-[46px]"
       data-target={saved.value}
       data-prefix={saved.prefix}
       data-suffix={saved.suffix}
@@ -53,19 +53,73 @@ const { saved, cells } = siteContent.metrics;
 
   <!-- two stacked cells -->
   <div class="grid grid-rows-2">
-    {cells.map((cell, i) => (
-      <div class:list={["px-10 py-[26px]", i === 0 && "border-b border-line"]}>
-        <div class="font-mono text-4xl font-extrabold tracking-[-0.02em] text-ink">
-          {cell.value}<span class:list={["text-xl font-bold", cell.subColor === "green" ? "text-green" : "text-accent"]}>{cell.sub}</span>
-        </div>
-        <div class="mt-1 text-sm text-muted-2">{cell.caption}</div>
+    <!-- CI time: counts down from → to while the "after" bar shrinks -->
+    <div class="border-b border-line px-10 py-[26px]">
+      <div class="font-mono text-4xl font-extrabold tracking-[-0.02em] text-ink">
+        <span
+          id="metric-ci"
+          data-countdown
+          data-from={ci.from}
+          data-to={ci.to}
+          data-final={ci.display}
+        >{ci.from}</span><span class="text-xl font-bold text-green">{ci.sub}</span>
       </div>
-    ))}
+      <!-- one bar: the faint track marks where the run started; the fill shrinks and fades red → green -->
+      <div class="mt-3 grid grid-cols-[1fr_64px] items-center gap-2 font-mono text-[11px]" aria-hidden="true">
+        <div class="h-1.5 rounded-full bg-line-2">
+          <div
+            id="ci-bar"
+            class="h-full rounded-full"
+            style="width: 100%; background-color: var(--color-tl-red);"
+            data-pct={ciAfterPct}
+          ></div>
+        </div>
+        <span
+          id="ci-bar-label"
+          class="text-right"
+          style="color: var(--color-tl-red);"
+          data-before={ci.beforeValue}
+          data-after={ci.afterValue}
+        >{ci.beforeValue}</span>
+      </div>
+      <div class="mt-2.5 text-sm text-muted-2">{ci.caption}</div>
+    </div>
+    <!-- Vulnerability hunting: a scan line sweeps the squares, turning each open finding (red) patched (green) -->
+    <div class="px-10 py-[26px]">
+      <div class="font-mono text-4xl font-extrabold tracking-[-0.02em] text-ink">
+        <span
+          id="metric-cve"
+          data-countup
+          data-target={cve.value}
+          data-suffix={cve.suffix}
+        >0{cve.suffix}</span><span class="text-xl font-bold text-green">{cve.sub}</span>
+      </div>
+      <div class="mt-3 font-mono text-[11px] text-faint" aria-hidden="true">
+        <div class="mb-1.5 flex justify-between">
+          <span>{cve.scanLabel}</span><span class="text-green">{cve.scanResult}</span>
+        </div>
+        <div id="cve-grid" class="relative flex gap-[3px]">
+          {Array.from({ length: cve.squares }, (_, i) => (
+            <span
+              class="h-2.5 flex-1 rounded-[2px] bg-tl-red/80"
+              style={`transition: background-color .25s ease ${(i * 0.035).toFixed(3)}s;`}
+              data-cve-square
+            ></span>
+          ))}
+          <span
+            id="cve-scan"
+            class="pointer-events-none absolute -top-1 -bottom-1 left-0 w-[2px] bg-accent opacity-0 shadow-[0_0_8px_var(--color-accent)]"
+          ></span>
+        </div>
+      </div>
+      <div class="mt-2.5 text-sm text-muted-2">{cve.caption}</div>
+    </div>
   </div>
 </div>
 
 <script>
   // Count-up numbers: ease-out cubic from 0, triggered on scroll into view
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const runCountUp = (el: HTMLElement) => {
     if (el.dataset.done) return;
     el.dataset.done = "1";
@@ -74,6 +128,10 @@ const { saved, cells } = siteContent.metrics;
     const decimals = parseInt(el.dataset.decimals ?? "0", 10);
     const prefix = el.dataset.prefix ?? "";
     const suffix = el.dataset.suffix ?? "";
+    if (reduceMotion) {
+      el.textContent = prefix + target.toFixed(decimals) + suffix;
+      return;
+    }
     const dur = 900;
     const t0 = performance.now();
     const frame = (now: number) => {
@@ -104,47 +162,204 @@ const { saved, cells } = siteContent.metrics;
     countUps.forEach((n) => io.observe(n));
   }
 
-  // Cost sparkline: line draws left→right, area fades in, on scroll into view
-  const svg = document.getElementById("save-chart");
-  const drawChart = () => {
-    if (!svg) return;
-    const line = svg.querySelector<SVGPolylineElement>("#save-line");
-    const area = svg.querySelector<SVGPathElement>("#save-area");
-    if (!line) return;
-    const len = line.getTotalLength();
-    line.style.transition = "none";
-    line.style.strokeDasharray = String(len);
-    line.style.strokeDashoffset = String(len);
-    line.getBoundingClientRect();
-    line.style.transition = "stroke-dashoffset 1.1s cubic-bezier(.22,.61,.36,1)";
-    line.style.strokeDashoffset = "0";
-    if (area) {
-      area.style.opacity = "0";
-      area.getBoundingClientRect();
-      area.style.opacity = "1";
-    }
-  };
-  if (svg) {
-    const trigger = () => {
-      if (svg.dataset.drawn) return;
-      svg.dataset.drawn = "1";
-      drawChart();
+  // Runs `step` repeatedly while `el` is on screen and the tab is visible; `step`
+  // returns the ms to wait before the next call. Pauses off-screen, resumes in place.
+  const loopWhileVisible = (el: Element, step: () => number) => {
+    let inView = !("IntersectionObserver" in window);
+    let timer: number | undefined;
+    const run = () => {
+      if (!inView || document.hidden) {
+        timer = undefined;
+        return;
+      }
+      timer = window.setTimeout(run, step());
     };
-    if (!("IntersectionObserver" in window)) {
-      trigger();
-    } else {
-      const io = new IntersectionObserver(
+    const resume = () => {
+      if (timer === undefined && inView && !document.hidden) run();
+    };
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(
         (entries) => {
           entries.forEach((e) => {
-            if (e.isIntersecting) {
-              trigger();
-              io.unobserve(e.target);
-            }
+            inView = e.isIntersecting;
+            if (inView) resume();
           });
         },
         { threshold: 0.4 }
-      );
-      io.observe(svg);
+      ).observe(el);
+    }
+    document.addEventListener("visibilitychange", resume);
+    resume();
+  };
+
+  // CI time, on a loop: number and bar label count down from → to while the bar shrinks
+  // and fades red → green, hold, then all snap back to red for the next run.
+  // Reduced motion shows the end state.
+  const ciNum = document.querySelector<HTMLElement>("[data-countdown]");
+  const ciBar = document.getElementById("ci-bar");
+  const ciLabel = document.getElementById("ci-bar-label");
+  if (ciNum) {
+    const from = parseFloat(ciNum.dataset.from ?? "");
+    const to = parseFloat(ciNum.dataset.to ?? "");
+    const final = ciNum.dataset.final ?? String(to);
+    const pct = ciBar?.dataset.pct ?? "100";
+    const labelBefore = ciLabel?.dataset.before ?? "";
+    const labelAfter = ciLabel?.dataset.after ?? "";
+    const RED = "var(--color-tl-red)";
+    const GREEN = "var(--color-green)";
+    const DROP = 2600;
+    const setBar = (width: string, color: string, ms: number, easing: string) => {
+      const transition = ms ? `width ${ms}ms ${easing}, background-color ${ms}ms ease, color ${ms}ms ease` : "none";
+      if (ciBar) {
+        ciBar.style.transition = transition;
+        ciBar.style.width = width;
+        ciBar.style.backgroundColor = color;
+      }
+      if (ciLabel) {
+        ciLabel.style.transition = transition;
+        ciLabel.style.color = color;
+      }
+    };
+
+    if (isNaN(from) || isNaN(to) || reduceMotion) {
+      ciNum.textContent = final;
+      setBar(`${pct}%`, GREEN, 0, "");
+      if (ciLabel) ciLabel.textContent = labelAfter;
+    } else {
+      let phase: "drop" | "reset" = "drop";
+      loopWhileVisible(ciNum, () => {
+        if (phase === "drop") {
+          phase = "reset";
+          setBar(`${pct}%`, GREEN, DROP, "cubic-bezier(.22,.61,.36,1)");
+          const t0 = performance.now();
+          const frame = (now: number) => {
+            const p = Math.min(1, (now - t0) / DROP);
+            const value = (from - (from - to) * (1 - Math.pow(1 - p, 3))).toFixed(0);
+            ciNum.textContent = value;
+            if (ciLabel) ciLabel.textContent = `${value} min`;
+            if (p < 1) requestAnimationFrame(frame);
+            else {
+              ciNum.textContent = final;
+              if (ciLabel) ciLabel.textContent = labelAfter;
+            }
+          };
+          requestAnimationFrame(frame);
+          return DROP + 3000;
+        }
+        phase = "drop";
+        ciNum.textContent = from.toFixed(0);
+        if (ciLabel) ciLabel.textContent = labelBefore;
+        setBar("100%", RED, 600, "ease");
+        return 1400;
+      });
+    }
+  }
+
+  // Vulnerability hunting, on a loop: scan line sweeps left→right patching red squares
+  // green, holds, then new findings pop up red at random and the next scan clears them.
+  // Reduced motion shows the patched state only.
+  const cveGrid = document.getElementById("cve-grid");
+  if (cveGrid) {
+    const squares = [...cveGrid.querySelectorAll<HTMLElement>("[data-cve-square]")];
+    const scan = document.getElementById("cve-scan");
+    const STEP = 35; // ms between squares, shared by the line and the colour delays
+    const sweep = squares.length * STEP;
+    const setRed = (sq: HTMLElement, red: boolean) => {
+      sq.classList.toggle("bg-tl-red/80", red);
+      sq.classList.toggle("bg-green", !red);
+    };
+
+    if (reduceMotion) {
+      squares.forEach((sq) => {
+        sq.style.transition = "none";
+        setRed(sq, false);
+      });
+    } else {
+      let phase: "sweep" | "infect" = "sweep";
+      loopWhileVisible(cveGrid, () => {
+        if (phase === "sweep") {
+          phase = "infect";
+          squares.forEach((sq, i) => {
+            sq.style.transitionDelay = `${(i * STEP) / 1000}s`;
+            setRed(sq, false);
+          });
+          if (scan) {
+            scan.style.transition = "none";
+            scan.style.opacity = "1";
+            scan.animate([{ left: "0%" }, { left: "100%" }], { duration: sweep, easing: "linear", fill: "forwards" })
+              .onfinish = () => {
+                scan.style.transition = "opacity .3s ease";
+                scan.style.opacity = "0";
+              };
+          }
+          return sweep + 1800;
+        }
+        phase = "sweep";
+        const count = 6 + Math.floor(Math.random() * 7); // 6–12 new findings
+        [...squares]
+          .sort(() => Math.random() - 0.5)
+          .slice(0, count)
+          .forEach((sq) => {
+            sq.style.transitionDelay = `${(Math.random() * 0.9).toFixed(2)}s`;
+            setRed(sq, true);
+          });
+        return 1400;
+      });
+    }
+  }
+
+  // Cost saved: $ counts up once on first view; the sparkline loops (draws left→right
+  // with its area fading in, holds, then retracts). Reduced motion shows the final state.
+  const savedNum = document.getElementById("metric-saved");
+  const svg = document.getElementById("save-chart");
+  const line = svg?.querySelector<SVGPolylineElement>("#save-line");
+  const area = svg?.querySelector<SVGPathElement>("#save-area");
+  if (savedNum && svg && line) {
+    const target = parseFloat(savedNum.dataset.target ?? "");
+    const prefix = savedNum.dataset.prefix ?? "";
+    const suffix = savedNum.dataset.suffix ?? "";
+    const DRAW = 1800;
+    const len = line.getTotalLength();
+    line.style.strokeDasharray = String(len);
+
+    if (isNaN(target) || reduceMotion) {
+      savedNum.textContent = prefix + target + suffix;
+      line.style.strokeDashoffset = "0";
+      if (area) area.style.opacity = "1";
+    } else {
+      line.style.strokeDashoffset = String(len);
+      let phase: "draw" | "reset" = "draw";
+      let counted = false;
+      loopWhileVisible(svg, () => {
+        if (phase === "draw") {
+          phase = "reset";
+          line.style.transition = `stroke-dashoffset ${DRAW}ms cubic-bezier(.22,.61,.36,1)`;
+          line.style.strokeDashoffset = "0";
+          if (area) {
+            area.style.transition = `opacity ${DRAW}ms ease ${DRAW / 3}ms`;
+            area.style.opacity = "1";
+          }
+          if (!counted) {
+            counted = true;
+            const t0 = performance.now();
+            const frame = (now: number) => {
+              const p = Math.min(1, (now - t0) / DRAW);
+              savedNum.textContent = prefix + Math.round(target * (1 - Math.pow(1 - p, 3))) + suffix;
+              if (p < 1) requestAnimationFrame(frame);
+            };
+            requestAnimationFrame(frame);
+          }
+          return DRAW + 3500;
+        }
+        phase = "draw";
+        line.style.transition = "stroke-dashoffset 500ms ease-in";
+        line.style.strokeDashoffset = String(len);
+        if (area) {
+          area.style.transition = "opacity 400ms ease";
+          area.style.opacity = "0";
+        }
+        return 1000;
+      });
     }
   }
 </script>

@@ -183,7 +183,7 @@ export default function ContactForm() {
         .cf-label {
           font-family: var(--font-mono, monospace);
           font-size: 12px;
-          color: #6b7885;
+          color: #76838f;
         }
 
         .cf-label::before {
@@ -207,12 +207,17 @@ export default function ContactForm() {
         }
 
         .cf-input::placeholder {
-          color: #6b7885;
+          color: #76838f;
         }
 
         .cf-input:focus {
           border-color: #ff9900;
           box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.12);
+        }
+
+        .cf-input:focus-visible {
+          outline: 2px solid #ff9900;
+          outline-offset: 2px;
         }
 
         .cf-input:disabled {

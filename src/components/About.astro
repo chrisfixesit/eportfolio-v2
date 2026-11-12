@@ -1,14 +1,12 @@
 ---
 import { siteContent } from "../data/content";
+import SectionPrompt from "./SectionPrompt.astro";
 
 const { about } = siteContent;
 ---
 
 <section id="about" class="grid grid-cols-[180px_1fr] gap-10 px-11 py-[52px] max-[920px]:grid-cols-1 max-[920px]:px-[22px]">
-  <div class="section-label">
-    {about.label}
-    <div class="mt-2 text-faint">{about.cmd}</div>
-  </div>
+  <SectionPrompt title={about.title} path={about.path} cmd={about.cmd} class="pt-1" />
   <div class="max-w-[720px] text-[17px] leading-[1.7] text-body-2 [&_strong]:font-normal [&_strong]:text-ink">
     {about.paragraphs.map((para, i) => (
       <p class:list={["m-0", i < about.paragraphs.length - 1 && "mb-[18px]"]} set:html={para} />

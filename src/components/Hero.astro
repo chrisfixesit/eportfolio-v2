@@ -19,10 +19,12 @@ const ctaClasses: Record<string, string> = {
   <div class="relative overflow-hidden px-11 pb-14 pt-[60px] max-[920px]:px-[22px] max-[920px]:pb-9 max-[920px]:pt-11">
     <div class="bg-grid-overlay absolute inset-0 opacity-40" aria-hidden="true"></div>
     <div class="relative">
-      <div class="mb-[22px] min-h-5 font-mono text-sm text-green">
-        <span id="hero-type"></span><span class="caret" aria-hidden="true"></span>
+      <div class="mb-[22px] font-mono text-sm">
+        <div class="min-h-5 text-green">
+          $ <span id="hero-type">{hero.command}</span><span id="hero-caret" class="caret ml-0.5" aria-hidden="true"></span>
+        </div>
+        <div id="hero-out" class="mt-1 text-[13px] text-muted-2">{hero.commandOutput}</div>
       </div>
-      <div class="mb-2 font-mono text-[13px] text-faint">{hero.kicker}</div>
       <h1 class="m-0 font-mono text-[64px] font-extrabold leading-[1.02] tracking-[-0.03em] text-ink max-[920px]:text-[46px] max-[560px]:text-[38px]">
         {hero.nameLines[0]}<br />{hero.nameLines[1]}<span class="text-accent">.</span>
       </h1>
@@ -40,7 +42,7 @@ const ctaClasses: Record<string, string> = {
 
   <!-- right: photo in a terminal frame -->
   <div class="flex items-center py-12 pl-2 pr-11 max-[920px]:px-[22px] max-[920px]:pb-10 max-[920px]:pt-0">
-    <div class="w-full overflow-hidden rounded-xl border border-line bg-surface shadow-[0_20px_50px_rgba(0,0,0,0.4)]">
+    <div class="ml-auto w-full max-w-[340px] overflow-hidden rounded-xl border border-line bg-surface shadow-[0_20px_50px_rgba(0,0,0,0.4)] max-[920px]:ml-0 max-[920px]:max-w-[260px]">
       <div class="flex items-center gap-2 border-b border-line px-3.5 py-[9px] font-mono text-[11px] text-faint">
         <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true"></span>{hero.photo.titlebar}
       </div>
@@ -49,7 +51,7 @@ const ctaClasses: Record<string, string> = {
           src={profilePhoto}
           alt={hero.photo.alt}
           widths={[480, 720, 960]}
-          sizes="(max-width: 920px) 100vw, 480px"
+          sizes="(max-width: 920px) 260px, 340px"
           class="absolute inset-0 h-full w-full object-cover"
         />
       </div>
@@ -58,36 +60,22 @@ const ctaClasses: Record<string, string> = {
 </div>
 
 <script>
-  // Rotating terminal prompt: types, holds, erases, advances
-  const el = document.getElementById("hero-type");
-  const cmds = [
-    "$ whoami --role --location",
-    "$ terraform apply -auto-approve",
-    "$ gh workflow run deploy.yml",
-    "$ aws ce get-cost-and-usage",
-  ];
-  if (el) {
-    let ci = 0;
-    const typeCmd = () => {
-      const full = cmds[ci];
-      let i = 0;
-      const type = () => {
-        el.textContent = full.slice(0, i);
-        i += 1;
-        if (i <= full.length) setTimeout(type, 45);
-        else setTimeout(erase, ci === 0 ? 2600 : 1900);
-      };
-      const erase = () => {
-        el.textContent = full.slice(0, i);
-        i -= 1;
-        if (i >= 0) setTimeout(erase, 22);
-        else {
-          ci = (ci + 1) % cmds.length;
-          setTimeout(typeCmd, 260);
-        }
-      };
-      type();
+  // One-shot terminal prompt: type the command, then print its output.
+  // The full text is server-rendered, so no-JS and reduced-motion visitors see it immediately.
+  const typed = document.getElementById("hero-type");
+  const out = document.getElementById("hero-out");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (typed && out && !reduceMotion) {
+    const full = typed.textContent ?? "";
+    typed.textContent = "";
+    out.style.visibility = "hidden";
+    let i = 0;
+    const type = () => {
+      i += 1;
+      typed.textContent = full.slice(0, i);
+      if (i < full.length) setTimeout(type, 55);
+      else setTimeout(() => (out.style.visibility = ""), 320);
     };
-    typeCmd();
+    setTimeout(type, 400);
   }
 </script>

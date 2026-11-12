@@ -1,0 +1,478 @@
+---
+import SectionPrompt from "./SectionPrompt.astro";
+
+/**
+ * Zero-Downtime Pipeline — an interactive walkthrough of the project's own
+ * blue/green deploy. Simulated from the pipeline's real CodeDeploy setup:
+ * ECS Fargate task sets, a test-listener health gate, a 10% canary, and
+ * CloudWatch alarm-triggered auto-rollback.
+ *
+ * Categorical colours (blue #4493f8 / green #2ea043) are validated for CVD
+ * separation and contrast against the #0b0f14 band surface. Failures use the
+ * reserved critical colour and are always labelled in text as well.
+ */
+const steps = [
+  { id: "install", name: "Install", detail: "register the green task set" },
+  { id: "test", name: "AllowTestTraffic", detail: "health-check green on the test listener" },
+  { id: "canary", name: "ShiftTraffic", detail: "10% of production traffic to green" },
+  { id: "bake", name: "Monitor", detail: "CloudWatch watches error rate and latency" },
+  { id: "full", name: "ShiftTraffic", detail: "remaining 90% to green" },
+  { id: "done", name: "Terminate", detail: "drain and stop the blue task set" },
+];
+
+const scenarios = [
+  { id: "healthy", label: "▶ ship a good build", hint: "the happy path" },
+  { id: "unhealthy", label: "✕ ship a broken build", hint: "caught at the health gate" },
+  { id: "degrades", label: "⚠ ship one that degrades under load", hint: "caught by the alarm" },
+];
+
+const CELLS = 120;
+---
+
+<section id="deploy" class="border-y border-line bg-band px-11 py-[52px] max-[920px]:px-[22px]">
+  <SectionPrompt title="The deploy, step by step" path="~/zero-downtime-pipeline" cmd="./deploy.sh --watch" class="mb-3" />
+  <p class="mb-7 max-w-[680px] text-[15px] leading-relaxed text-muted">
+    Every project on this page ships through the same pipeline. Rather than claim it's
+    zero-downtime, here it is — run a deploy and watch what happens when the build is good,
+    when it's broken, and when it only falls over under real traffic.
+  </p>
+
+  <div class="overflow-hidden rounded-xl border border-line bg-surface">
+    <!-- titlebar -->
+    <div class="flex flex-wrap items-center gap-2 border-b border-line px-4 py-[11px] font-mono text-xs text-faint">
+      <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true"></span>
+      codedeploy — blue/green · ecs fargate · zero-downtime-pipeline
+    </div>
+
+    <!-- controls -->
+    <div class="flex flex-wrap items-center gap-2.5 border-b border-line px-4 py-3.5" data-controls>
+      {scenarios.map((s) => (
+        <button
+          type="button"
+          data-run={s.id}
+          title={s.hint}
+          aria-pressed="false"
+          class="rounded-md border border-line-2 px-3.5 py-2 text-left font-mono text-xs leading-snug text-body transition-colors hover:border-accent hover:text-accent aria-pressed:border-accent aria-pressed:text-accent"
+        >{s.label}</button>
+      ))}
+      <button
+        type="button"
+        data-run="reset"
+        class="ml-auto rounded-md border border-line px-3 py-2 font-mono text-xs text-faint transition-colors hover:border-line-2 hover:text-body"
+      >↺ reset</button>
+    </div>
+
+    <div class="grid grid-cols-[1.15fr_1fr] max-[920px]:grid-cols-1">
+      <!-- left: traffic + requests -->
+      <div class="border-r border-line px-5 py-5 max-[920px]:border-r-0 max-[920px]:border-b">
+        <div class="mb-2.5 font-mono text-xs text-faint">
+          # production traffic
+        </div>
+
+        <!-- 100% stacked split, 2px surface gap between segments -->
+        <div class="flex h-9 w-full gap-0.5 overflow-hidden rounded-md" data-split role="img" data-split-label>
+          <div class="h-full rounded-[4px] transition-[width] duration-700 ease-out" data-seg="blue" style="width:100%;background:#4493f8"></div>
+          <div class="h-full rounded-[4px] transition-[width] duration-700 ease-out" data-seg="green" style="width:0%;background:#2ea043"></div>
+        </div>
+
+        <!-- direct labels: identity is never colour alone -->
+        <div class="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs">
+          <span class="flex items-center gap-2 text-body">
+            <span class="h-2.5 w-2.5 rounded-[3px]" style="background:#4493f8" aria-hidden="true"></span>
+            blue · v1.4.2 <span class="tabular-nums text-ink" data-pct="blue">100%</span>
+          </span>
+          <span class="flex items-center gap-2 text-body">
+            <span class="h-2.5 w-2.5 rounded-[3px]" style="background:#2ea043" aria-hidden="true"></span>
+            green · v1.5.0 <span class="tabular-nums text-ink" data-pct="green">0%</span>
+          </span>
+        </div>
+
+        <div class="mb-2.5 mt-6 font-mono text-xs text-faint">
+          # requests, as they land
+        </div>
+        <div class="flex flex-wrap gap-[3px]" data-cells role="img" aria-label="No requests yet">
+          {Array.from({ length: CELLS }).map(() => (
+            <span class="h-2.5 w-2.5 rounded-[2px] bg-[#161c24] transition-colors duration-200" data-cell aria-hidden="true"></span>
+          ))}
+        </div>
+        <div class="mt-3 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs text-muted-2">
+          <span>served <span class="tabular-nums text-ink" data-count="served">0</span></span>
+          <span>failed <span class="tabular-nums" data-count="failed">0</span></span>
+          <span data-blast></span>
+        </div>
+
+        <div class="mb-2.5 mt-6 font-mono text-xs text-faint">
+          # cloudwatch · green task set
+        </div>
+        <dl class="grid grid-cols-[104px_1fr_auto] items-baseline gap-x-4 gap-y-2 font-mono text-xs max-[420px]:grid-cols-[96px_1fr] max-[420px]:gap-y-1 [&>dd:nth-of-type(even)]:max-[420px]:col-start-2 [&>dd:nth-of-type(even)]:max-[420px]:mb-1.5">
+          <dt class="text-muted-2">ErrorRate</dt>
+          <dd class="tabular-nums text-ink" data-metric="err">—</dd>
+          <dd class="text-ghost">alarm &gt; 1.00%</dd>
+          <dt class="text-muted-2">p99 latency</dt>
+          <dd class="tabular-nums text-ink" data-metric="p99">—</dd>
+          <dd class="text-ghost">alarm &gt; 1.50s</dd>
+        </dl>
+      </div>
+
+      <!-- right: lifecycle -->
+      <div class="px-5 py-5">
+        <div class="mb-3 font-mono text-xs text-faint">
+          # codedeploy lifecycle
+        </div>
+        <ol class="flex flex-col gap-2.5">
+          {steps.map((s) => (
+            <li class="grid grid-cols-[16px_1fr] items-start gap-3" data-step={s.id} data-state="idle">
+              <span class="mt-[3px] flex h-4 w-4 items-center justify-center font-mono text-[11px]" data-marker aria-hidden="true">○</span>
+              <span>
+                <span class="font-mono text-[13px] text-body" data-step-name>{s.name}</span>
+                <span class="block text-[12.5px] leading-snug text-muted-2" data-step-detail>{s.detail}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+
+    <!-- console -->
+    <div class="border-t border-line bg-band px-5 py-4">
+      <div
+        class="h-[132px] overflow-y-auto font-mono text-[12px] leading-[1.75] text-muted-2"
+        data-log
+        role="log"
+        tabindex="0"
+        aria-label="Deploy console output"
+      >
+        <div class="text-faint">ready — pick a deploy above.</div>
+      </div>
+    </div>
+
+    <!-- outcome -->
+    <div class="border-t border-line px-5 py-4 font-mono text-[13px] text-faint" data-outcome>
+      <span class="text-ghost">awaiting deploy</span>
+    </div>
+  </div>
+
+  <p class="mt-3.5 max-w-[680px] font-mono text-[11.5px] leading-relaxed text-ghost">
+    Simulated from the pipeline's real configuration — ECS Fargate task sets, a test-listener
+    health gate, a 10% canary, and CloudWatch alarm rollback, all defined in OpenTofu.
+    Timings are compressed.
+  </p>
+</section>
+
+<script>
+  (() => {
+    const root = document.getElementById("deploy");
+    if (!root) return;
+
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    const BLUE = "#4493f8";
+    const GREEN = "#2ea043";
+    const CRIT = "#f85149";
+
+    const segBlue = q('[data-seg="blue"]')!;
+    const segGreen = q('[data-seg="green"]')!;
+    const pctBlue = q('[data-pct="blue"]')!;
+    const pctGreen = q('[data-pct="green"]')!;
+    const cellWrap = q("[data-cells]")!;
+    const cells = qa("[data-cell]");
+    const served = q('[data-count="served"]')!;
+    const failed = q('[data-count="failed"]')!;
+    const blast = q("[data-blast]")!;
+    const log = q("[data-log]")!;
+    const outcome = q("[data-outcome]")!;
+    const splitWrap = q("[data-split]")!;
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let token = 0;
+    let clock = 0;
+    const sleep = (ms: number) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
+
+    // deterministic pseudo-random so a replay looks the same
+    let seed = 1;
+    const rnd = () => ((seed = (seed * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
+
+    const setSplit = (g: number) => {
+      segBlue.style.width = `${100 - g}%`;
+      segGreen.style.width = `${g}%`;
+      pctBlue.textContent = `${100 - g}%`;
+      pctGreen.textContent = `${g}%`;
+      splitWrap.setAttribute(
+        "aria-label",
+        `Production traffic: blue v1.4.2 ${100 - g} percent, green v1.5.0 ${g} percent`
+      );
+    };
+
+    const stamp = () => {
+      clock += 7 + Math.floor(rnd() * 11);
+      const m = String(Math.floor(clock / 60)).padStart(2, "0");
+      const s = String(clock % 60).padStart(2, "0");
+      return `${m}:${s}`;
+    };
+
+    const say = (text: string, tone: "" | "ok" | "warn" | "crit" = "") => {
+      const line = document.createElement("div");
+      const color =
+        tone === "ok" ? "color:#2ea043" : tone === "crit" ? `color:${CRIT}` : tone === "warn" ? "color:#ff9900" : "";
+      line.innerHTML =
+        `<span style="color:#76838f">${stamp()}</span> ` +
+        `<span style="${color}"></span>`;
+      (line.lastElementChild as HTMLElement).textContent = text;
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    };
+
+    const mErr = q('[data-metric="err"]')!;
+    const mP99 = q('[data-metric="p99"]')!;
+    const setMetrics = (err: string, p99: string, breach = false) => {
+      mErr.textContent = err;
+      mP99.textContent = p99;
+      mErr.style.color = breach ? CRIT : "";
+      mP99.style.color = breach ? "#ff9900" : "";
+    };
+
+    const FAINT = "#76838f";
+    const MARK: Record<string, [string, string]> = {
+      idle: ["○", FAINT],
+      run: ["◐", "#ff9900"],
+      ok: ["●", "#2ea043"],
+      fail: ["✕", CRIT],
+      skip: ["–", FAINT],
+    };
+
+    const step = (id: string, state: keyof typeof MARK) => {
+      const li = q(`[data-step="${id}"]`);
+      if (!li) return;
+      li.dataset.state = state;
+      const marker = li.querySelector("[data-marker]") as HTMLElement;
+      const name = li.querySelector("[data-step-name]") as HTMLElement;
+      const detail = li.querySelector("[data-step-detail]") as HTMLElement;
+      const [glyph, color] = MARK[state];
+      marker.textContent = glyph;
+      marker.style.color = color;
+      // No opacity dimming — it multiplies contrast below AA. Skipped steps get an
+      // explicit AA-passing grey instead.
+      name.style.color = state === "idle" ? "" : state === "skip" ? FAINT : color;
+      detail.style.color = state === "skip" ? FAINT : "";
+      li.setAttribute("aria-label", `${name.textContent}: ${state}`);
+    };
+
+    let nServed = 0;
+    let nFailed = 0;
+    let idx = 0;
+
+    const paint = (kind: "blue" | "green" | "fail") => {
+      if (idx >= cells.length) return;
+      const c = cells[idx++];
+      if (kind === "fail") {
+        c.style.background = CRIT;
+        c.title = "failed — served by the degraded green task set";
+        nFailed++;
+      } else {
+        c.style.background = kind === "blue" ? BLUE : GREEN;
+        c.title = kind === "blue" ? "200 — blue v1.4.2" : "200 — green v1.5.0";
+        nServed++;
+      }
+      served.textContent = String(nServed);
+      failed.textContent = String(nFailed);
+      failed.style.color = nFailed > 0 ? CRIT : "";
+      cellWrap.setAttribute(
+        "aria-label",
+        `${nServed + nFailed} requests: ${nServed} served, ${nFailed} failed`
+      );
+    };
+
+    /** stream n requests, routing greenPct of them to green; errRate applies to green only */
+    const stream = async (n: number, greenPct: number, errRate = 0) => {
+      for (let i = 0; i < n; i++) {
+        const toGreen = rnd() * 100 < greenPct;
+        if (toGreen && rnd() < errRate) paint("fail");
+        else paint(toGreen ? "green" : "blue");
+        await sleep(38);
+      }
+    };
+
+    const reset = () => {
+      token++;
+      clock = 0;
+      seed = 1;
+      nServed = nFailed = idx = 0;
+      setSplit(0);
+      cells.forEach((c) => {
+        c.style.background = "";
+        c.removeAttribute("title");
+      });
+      cellWrap.setAttribute("aria-label", "No requests yet");
+      served.textContent = "0";
+      failed.textContent = "0";
+      failed.style.color = "";
+      blast.textContent = "";
+      blast.style.color = "";
+      setMetrics("—", "—");
+      Object.keys({ install: 1, test: 1, canary: 1, bake: 1, full: 1, done: 1 }).forEach((id) =>
+        step(id, "idle")
+      );
+      log.innerHTML = '<div style="color:#76838f">ready — pick a deploy above.</div>';
+      outcome.innerHTML = '<span style="color:#76838f">awaiting deploy</span>';
+    };
+
+    const finish = (glyph: string, text: string, color: string, note?: string) => {
+      outcome.innerHTML = "";
+      const head = document.createElement("div");
+      head.style.color = color;
+      head.textContent = `${glyph} ${text}`;
+      outcome.appendChild(head);
+      if (note) {
+        const sub = document.createElement("div");
+        sub.className = "mt-1 text-[12px] leading-snug";
+        sub.style.color = "#8b97a3";
+        sub.textContent = note;
+        outcome.appendChild(sub);
+      }
+    };
+
+    // Marks which scenario is running. Buttons are never disabled: disabling the
+    // control that was just activated throws keyboard focus back to <body>.
+    const setBusy = (busy: boolean, kind?: string) => {
+      qa("[data-run]").forEach((b) => {
+        if (b.dataset.run === "reset") return;
+        b.setAttribute("aria-pressed", String(busy && b.dataset.run === kind));
+      });
+      root!.setAttribute("aria-busy", String(busy));
+    };
+
+    async function play(kind: string) {
+      reset();
+      const me = token;
+      const alive = () => me === token;
+      setBusy(true, kind);
+
+      say("push to main — OIDC role assumed, no static keys in CI");
+      await sleep(500);
+      if (!alive()) return;
+
+      step("install", "run");
+      say("registering green task set v1.5.0 on ECS Fargate");
+      await sleep(900);
+      if (!alive()) return;
+      step("install", "ok");
+
+      step("test", "run");
+      say("test listener :8080 → green · running health checks");
+      await stream(10, 0);
+      if (!alive()) return;
+
+      if (kind === "unhealthy") {
+        say("health check failed — HTTP 500 on /healthz, 3 consecutive", "crit");
+        step("test", "fail");
+        ["canary", "bake", "full"].forEach((s) => step(s, "skip"));
+        await sleep(600);
+        if (!alive()) return;
+        say("lifecycle event failed — production traffic never shifted", "warn");
+        setMetrics("n/a", "n/a");
+        step("done", "run");
+        say("terminating green task set, blue untouched");
+        await stream(14, 0);
+        if (!alive()) return;
+        step("done", "ok");
+        finish(
+          "↺",
+          "Rolled back automatically · 0 requests reached the broken build",
+          "#ff9900",
+          "The gate is AllowTestTraffic: green only ever answers the test listener until it proves healthy, so a build this broken never meets a user."
+        );
+        setBusy(false);
+        return;
+      }
+
+      say("health checks passed (5/5)", "ok");
+      step("test", "ok");
+
+      step("canary", "run");
+      say("shifting 10% of production traffic to green");
+      setSplit(10);
+      await sleep(900);
+      if (!alive()) return;
+      step("canary", "ok");
+
+      step("bake", "run");
+      say("CloudWatch watching ErrorRate and TargetResponseTime");
+      setMetrics("0.00%", "241ms");
+
+      if (kind === "degrades") {
+        setMetrics("0.00%", "244ms");
+        await stream(22, 10, 0);
+        if (!alive()) return;
+        setMetrics("0.31%", "1.92s", true);
+        say("green p99 latency climbing — 244ms → 1.92s under real load", "warn");
+        await stream(44, 10, 0.85);
+        if (!alive()) return;
+        setMetrics("4.12%", "2.60s", true);
+        say("ALARM: ErrorRate > 1% for 2 datapoints — rollback triggered", "crit");
+        step("bake", "fail");
+        ["full"].forEach((s) => step(s, "skip"));
+        setSplit(0);
+        await sleep(700);
+        if (!alive()) return;
+        step("done", "run");
+        say("traffic returned to blue v1.4.2 · green task set terminated");
+        await stream(16, 0);
+        if (!alive()) return;
+        step("done", "ok");
+        blast.textContent = "blast radius 10%";
+        blast.style.color = "#ff9900";
+        finish(
+          "↺",
+          `Rolled back on the alarm · ${nFailed} of ${nServed + nFailed} requests affected (~${Math.round((nFailed / (nServed + nFailed)) * 100)}%)`,
+          "#ff9900",
+          "This is what the canary is actually for. A build that passes its health checks can still fall over under real traffic — but only the 10% on green ever sees it, and only until the alarm fires. Without the canary that is 100% of requests, until somebody notices."
+        );
+        setBusy(false);
+        return;
+      }
+
+      await stream(34, 10);
+      if (!alive()) return;
+      setMetrics("0.00%", "238ms");
+      say("alarms steady · error rate 0.00% across the bake", "ok");
+      step("bake", "ok");
+
+      step("full", "run");
+      say("shifting the remaining 90% to green");
+      setSplit(100);
+      await sleep(900);
+      if (!alive()) return;
+      step("full", "ok");
+
+      step("done", "run");
+      say("blue task set draining");
+      await stream(18, 100);
+      if (!alive()) return;
+      step("done", "ok");
+      say("deployment succeeded", "ok");
+      finish(
+        "✓",
+        `Deployed · ${nServed} requests served, 0 failed`,
+        "#2ea043",
+        "No maintenance window, no dropped connections — blue kept serving until green had proved itself twice."
+      );
+      setBusy(false);
+    }
+
+    qa("[data-run]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const kind = btn.dataset.run!;
+        if (kind === "reset") {
+          reset();
+          setBusy(false);
+        } else {
+          play(kind);
+        }
+      })
+    );
+
+    reset();
+  })();
+</script>

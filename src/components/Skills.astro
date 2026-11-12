@@ -1,20 +1,37 @@
 ---
 import { siteContent } from "../data/content";
+import SectionPrompt from "./SectionPrompt.astro";
 
 const { skills } = siteContent;
 ---
 
 <section id="skills" class="px-11 pb-[52px] pt-2 max-[920px]:px-[22px]">
-  <div class="section-label mb-[26px]">
-    {skills.label} <span class="text-faint">{skills.cmd}</span>
-  </div>
+  <SectionPrompt title={skills.title} path={skills.path} cmd={skills.cmd} class="mb-[26px]" />
   <div class="grid grid-cols-2 gap-3.5 max-[920px]:grid-cols-1">
-    {skills.cards.map((card) => (
+    {skills.cards.map((card, ci) => (
       <div class="rounded-[10px] border border-line bg-surface px-5 py-[18px]">
-        <div class="mb-3 font-mono text-[13px] text-ink">{card.title}</div>
+        <h3 class="mb-3 font-mono text-[13px] text-ink">{card.title}</h3>
         <div class="flex flex-wrap gap-[7px]">
-          {card.tags.map((tag) => <span class="pill">{tag}</span>)}
-          <span class="pill text-faint">{card.more}</span>
+          {card.tags.map((tag, ti) => {
+            const tip = skills.tips[tag];
+            const id = `skill-tip-${ci}-${ti}`;
+            return (
+              <span class="group/tag relative">
+                <span
+                  class="pill block cursor-help transition-colors group-hover/tag:border-accent group-hover/tag:text-accent group-focus-within/tag:border-accent group-focus-within/tag:text-accent"
+                  tabindex={tip ? 0 : undefined}
+                  aria-describedby={tip ? id : undefined}
+                >{tag}</span>
+                {tip && (
+                  <span
+                    id={id}
+                    role="tooltip"
+                    class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 w-max max-w-[220px] -translate-x-1/2 translate-y-1 rounded-md border border-accent/40 bg-band px-2.5 py-1.5 text-center text-xs leading-snug text-body opacity-0 shadow-lg transition duration-150 group-hover/tag:translate-y-0 group-hover/tag:opacity-100 group-focus-within/tag:translate-y-0 group-focus-within/tag:opacity-100"
+                  >{tip}</span>
+                )}
+              </span>
+            );
+          })}
         </div>
       </div>
     ))}

@@ -80,4 +80,4 @@ npm run preview      # preview the built site
 
 ## Old repo
 
-[christophercorbin/AWS-eportfolio](https://github.com/christophercorbin/AWS-eportfolio) is the v1 repo (will be archived in PR 4). It used multi-account S3+CloudFront+SAM. Don't reference its patterns — they don't apply here.
+[chrisfixesit/AWS-eportfolio](https://github.com/chrisfixesit/AWS-eportfolio) is the v1 repo (will be archived in PR 4). It used multi-account S3+CloudFront+SAM. Don't reference its patterns — they don't apply here.

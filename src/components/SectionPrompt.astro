@@ -1,0 +1,22 @@
+---
+/**
+ * Section heading styled as a shell prompt: `~/path $ command`.
+ * Screen readers get the plain section title instead of the prompt.
+ */
+interface Props {
+  title: string;
+  path: string;
+  cmd: string;
+  class?: string;
+}
+const { title, path, cmd, class: className } = Astro.props;
+---
+
+<h2 class:list={["m-0 font-mono text-[15px] font-normal", className]}>
+  <span class="sr-only">{title}</span>
+  <span aria-hidden="true">
+    <span class="text-green">{path}</span>
+    <span class="text-faint"> $ </span>
+    <span class="text-ink">{cmd}</span>
+  </span>
+</h2>

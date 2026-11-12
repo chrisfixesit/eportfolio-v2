@@ -1,0 +1,65 @@
+---
+/**
+ * Mini architecture flow — a chain of boxes joined by arrows, in theme colours.
+ * A node prefixed with "*" is drawn in the accent colour.
+ */
+interface Props {
+  nodes: readonly string[];
+  title?: string;
+}
+const { nodes, title } = Astro.props;
+
+const H = 40;
+const BOX_H = 26;
+const GAP = 22;
+const PAD = 12;
+const CHAR = 6.9; // approx JetBrains Mono advance at 11.5px
+
+const parsed = nodes.map((n) => ({ label: n.replace(/^\*/, ""), accent: n.startsWith("*") }));
+const widths = parsed.map((n) => Math.max(48, Math.round(n.label.length * CHAR + PAD * 2)));
+const totalW = widths.reduce((a, w) => a + w, 0) + GAP * (parsed.length - 1);
+let x = 0;
+const boxes = parsed.map((n, i) => {
+  const b = { ...n, x, w: widths[i] };
+  x += widths[i] + GAP;
+  return b;
+});
+const y = (H - BOX_H) / 2;
+---
+
+<svg
+  viewBox={`0 0 ${totalW} ${H}`}
+  class="block h-[44px] w-full"
+  preserveAspectRatio="xMinYMid meet"
+  role="img"
+  aria-label={title ?? parsed.map((n) => n.label).join(" → ")}
+>
+  <defs>
+    <marker id="fd-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0,0.5 L7.5,4 L0,7.5 Z" fill="#76838f"></path>
+    </marker>
+  </defs>
+  {boxes.map((b, i) => (
+    <>
+      <rect
+        x={b.x} y={y} width={b.w} height={BOX_H} rx="6"
+        fill="#0b0f14"
+        stroke={b.accent ? "#ff9900" : "#2a3542"}
+        stroke-width="1"
+      ></rect>
+      <text
+        x={b.x + b.w / 2} y={H / 2 + 4}
+        text-anchor="middle"
+        font-family="'JetBrains Mono Variable','JetBrains Mono',ui-monospace,monospace"
+        font-size="11.5"
+        fill={b.accent ? "#ff9900" : "#c9d3de"}
+      >{b.label}</text>
+      {i < boxes.length - 1 && (
+        <line
+          x1={b.x + b.w + 2} y1={H / 2} x2={b.x + b.w + GAP - 2} y2={H / 2}
+          stroke="#76838f" stroke-width="1.2" marker-end="url(#fd-arrow)"
+        ></line>
+      )}
+    </>
+  ))}
+</svg>

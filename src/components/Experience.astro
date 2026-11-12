@@ -1,7 +1,11 @@
 ---
 import { siteContent } from "../data/content";
+import SectionPrompt from "./SectionPrompt.astro";
 
 const { experience } = siteContent;
+
+// Bullets shown up front per role; the rest sit behind a native <details> toggle
+const VISIBLE = 2;
 
 const dotClasses: Record<string, string> = {
   accent: "bg-accent shadow-[0_0_0_4px_rgba(255,153,0,0.15)]",
@@ -11,9 +15,7 @@ const dotClasses: Record<string, string> = {
 ---
 
 <section id="experience" class="px-11 pb-[52px] pt-2 max-[920px]:px-[22px]">
-  <div class="section-label mb-[26px]">
-    {experience.label} <span class="text-faint">{experience.cmd}</span>
-  </div>
+  <SectionPrompt title={experience.title} path={experience.path} cmd={experience.cmd} class="mb-[26px]" />
   <div class="flex flex-col">
     {experience.entries.map((entry, i) => (
       <div class="grid grid-cols-[24px_1fr] gap-5">
@@ -23,11 +25,35 @@ const dotClasses: Record<string, string> = {
         </div>
         <div class:list={[i < experience.entries.length - 1 && "pb-6"]}>
           <div class="flex justify-between gap-4 max-[560px]:flex-col max-[560px]:gap-1">
-            <div class="text-[19px] font-semibold text-ink">{entry.role}</div>
+            <h3 class="text-[19px] font-semibold text-ink">{entry.role}</h3>
             <div class="font-mono text-[13px] text-faint">{entry.dates}</div>
           </div>
-          <div class="mb-2.5 mt-1 font-mono text-sm text-accent">{entry.company}</div>
-          <div class="text-[15px] leading-relaxed text-muted">{entry.summary}</div>
+          <div class:list={["mb-2.5 mt-1 font-mono text-sm", i === 0 ? "text-accent" : "text-body"]}>
+            {entry.company}{entry.note && <span class="text-faint"> · {entry.note}</span>}
+          </div>
+          <ul class="m-0 grid list-none gap-1.5 p-0 text-[15px] leading-relaxed text-muted">
+            {entry.bullets.slice(0, VISIBLE).map((b) => (
+              <li class="grid grid-cols-[14px_1fr] gap-1.5">
+                <span class="font-mono text-faint" aria-hidden="true">▸</span><span>{b}</span>
+              </li>
+            ))}
+          </ul>
+          {entry.bullets.length > VISIBLE && (
+            <details class="group mt-3">
+              <summary class="inline-flex cursor-pointer list-none items-center gap-2 rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 font-mono text-[13px] font-medium text-accent transition-colors hover:border-accent hover:bg-accent/20 focus-visible:border-accent [&::-webkit-details-marker]:hidden">
+                <span class="inline-block transition-transform group-open:rotate-90" aria-hidden="true">▸</span>
+                <span class="group-open:hidden">show {entry.bullets.length - VISIBLE} more</span>
+                <span class="hidden group-open:inline">show less</span>
+              </summary>
+              <ul class="m-0 mt-1.5 grid list-none gap-1.5 p-0 text-[15px] leading-relaxed text-muted">
+                {entry.bullets.slice(VISIBLE).map((b) => (
+                  <li class="grid grid-cols-[14px_1fr] gap-1.5">
+                    <span class="font-mono text-faint" aria-hidden="true">▸</span><span>{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
         </div>
       </div>
     ))}

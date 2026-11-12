@@ -1,6 +1,9 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
+import ResumeHeading from "../components/ResumeHeading.astro";
 import { resumeContent as r } from "../data/content";
+
+const sec = r.sections;
 
 const description =
   "Résumé of Christopher Corbin — DevOps & Cloud Engineer. CI/CD, infrastructure as code, and zero-downtime deploys for public-sector digital services.";
@@ -22,64 +25,56 @@ const description =
           <h1 class="mono m-0 text-[34px] font-bold leading-none tracking-[-0.02em] text-r-ink">
             {r.name}<span class="text-r-accent">.</span>
           </h1>
-          <div class="mt-2 text-sm text-[#4a5561]">{r.tagline}</div>
+          <div class="mt-2 text-[12.5px] text-[#4a5561]">{r.tagline}</div>
         </div>
-        <div class="mono whitespace-nowrap text-right text-[10.5px] leading-[1.7] text-[#4a5561]">
+        <div class="mono whitespace-nowrap text-right text-[10.5px] leading-[1.55] text-[#4a5561]">
           {r.contactLines.map((line) => <div>{line}</div>)}
           <div class="text-r-accent">{r.location}</div>
         </div>
       </header>
 
       <!-- summary -->
-      <p class="mb-0.5 mt-3.5 text-[12.5px] leading-relaxed text-r-body">{r.summary}</p>
-
-      <!-- DORA strip -->
-      <div class="mt-3 grid grid-cols-4 overflow-hidden rounded-md border border-r-line">
-        {r.dora.map((cell, i) => (
-          <div class:list={["px-3 py-[9px]", i < r.dora.length - 1 && "border-r border-r-line"]}>
-            <div class="mono text-[8.5px] uppercase tracking-[0.04em] text-r-muted">{cell.label}</div>
-            <div class:list={["mono mt-0.5 text-sm font-bold", cell.green ? "text-r-green" : "text-r-ink"]}>{cell.value}</div>
-          </div>
-        ))}
-      </div>
+      <p class="mb-0 mt-3 text-[12.5px] leading-[1.6] text-r-body">{r.summary}</p>
 
       <!-- experience -->
-      <div class="rsec-heading">
-        <span class="mono text-xs font-bold text-r-accent">$</span>
-        <h2 class="mono m-0 text-xs uppercase tracking-[0.1em] text-r-ink">experience</h2>
-      </div>
+      <ResumeHeading {...sec.experience} />
       {r.experience.map((job, i) => (
-        <div class:list={[i < r.experience.length - 1 ? "mb-3.5" : "mb-1"]}>
+        <div class:list={[i < r.experience.length - 1 ? "mb-2.5" : "mb-1"]}>
           <div class="flex items-baseline justify-between gap-4">
             <div class="text-sm font-bold text-r-ink">{job.role}</div>
             <div class="mono text-[10.5px] text-r-muted">{job.dates}</div>
           </div>
-          <div class="mono mb-[5px] mt-0.5 text-[11px] text-r-accent">{job.company}</div>
-          <ul class="m-0 list-disc pl-[18px] text-xs leading-[1.55] text-r-body">
-            {job.bullets.map((b) => <li>{b}</li>)}
-          </ul>
+          {job.bullets.length === 1 ? (
+            <div class="mt-0.5 text-xs leading-[1.5] text-r-body">
+              <span class="mono text-[11px] text-r-accent">{job.company}</span> · {job.bullets[0]}
+            </div>
+          ) : (
+            <>
+              <div class="mono mb-[5px] mt-0.5 text-[11px] text-r-accent">{job.company}</div>
+              <ul class="m-0 list-disc pl-[18px] text-xs leading-[1.5] text-r-body">
+                {job.bullets.map((b) => <li>{b}</li>)}
+              </ul>
+            </>
+          )}
         </div>
       ))}
 
       <!-- selected projects -->
-      <div class="rsec-heading">
-        <span class="mono text-xs font-bold text-r-accent">$</span>
-        <h2 class="mono m-0 text-xs uppercase tracking-[0.1em] text-r-ink">selected projects</h2>
-      </div>
-      <div class="mb-1 grid grid-cols-2 gap-x-[26px] gap-y-3.5">
+      <ResumeHeading {...sec.projects} />
+      <div class="mb-1 grid grid-cols-2 gap-x-[26px] gap-y-2.5">
         {r.projects.map((p) => (
           <div>
-            <div class="text-[12.5px] font-bold text-r-ink">{p.title}</div>
+            <div class="flex flex-wrap items-baseline justify-between gap-x-3">
+              <div class="text-[12.5px] font-bold text-r-ink">{p.title}</div>
+              {p.url && <a href={`https://${p.url}`} class="mono text-[10.5px] text-r-accent">{p.url}</a>}
+            </div>
             <div class="mt-[3px] text-[11.5px] leading-[1.5] text-[#3a434d]">{p.description}</div>
           </div>
         ))}
       </div>
 
       <!-- skills -->
-      <div class="rsec-heading">
-        <span class="mono text-xs font-bold text-r-accent">$</span>
-        <h2 class="mono m-0 text-xs uppercase tracking-[0.1em] text-r-ink">skills</h2>
-      </div>
+      <ResumeHeading {...sec.skills} />
       <div class="mb-1 grid grid-cols-[150px_1fr] gap-x-4 gap-y-1.5 text-xs leading-[1.5]">
         {r.skills.map((row) => (
           <>
@@ -90,12 +85,9 @@ const description =
       </div>
 
       <!-- certifications + education -->
-      <div class="mt-5 grid grid-cols-2 gap-[26px]">
+      <div class="mt-3.5 grid grid-cols-2 gap-[26px]">
         <div>
-          <div class="rsec-heading !mb-2.5 !mt-0">
-            <span class="mono text-xs font-bold text-r-accent">$</span>
-            <h2 class="mono m-0 text-xs uppercase tracking-[0.1em] text-r-ink">certifications</h2>
-          </div>
+          <ResumeHeading {...sec.certifications} class="!mt-0" />
           <ul class="m-0 list-disc pl-[18px] text-xs leading-[1.6] text-r-body">
             {r.certifications.map((c, i) => (
               <li class:list={[i === r.certifications.length - 1 && "text-r-accent"]}>{c}</li>
@@ -103,10 +95,7 @@ const description =
           </ul>
         </div>
         <div>
-          <div class="rsec-heading !mb-2.5 !mt-0">
-            <span class="mono text-xs font-bold text-r-accent">$</span>
-            <h2 class="mono m-0 text-xs uppercase tracking-[0.1em] text-r-ink">education</h2>
-          </div>
+          <ResumeHeading {...sec.education} class="!mt-0" />
           <div class="text-[13px] font-bold text-r-ink">{r.education.degree}</div>
           <div class="mono mt-0.5 text-[11px] text-r-accent">{r.education.school}</div>
         </div>
@@ -180,20 +169,11 @@ const description =
     font-family: var(--font-mono);
   }
 
-  .rsec-heading {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    border-bottom: 1.5px solid var(--color-r-ink);
-    padding-bottom: 4px;
-    margin: 20px 0 12px;
-  }
-
   /* Print: just the sheet, no chrome */
   @media print {
     @page {
       size: letter;
-      margin: 0.55in;
+      margin: 0.35in 0.4in;
     }
 
     :global(body) {
@@ -205,12 +185,17 @@ const description =
       padding: 0;
     }
 
+    .toolbar {
+      display: none;
+    }
+
     .sheet {
       max-width: none;
       min-height: 0;
       margin: 0;
       padding: 0;
       box-shadow: none;
+      zoom: 0.84;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }

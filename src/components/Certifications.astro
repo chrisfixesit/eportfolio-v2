@@ -1,22 +1,47 @@
 ---
 import { siteContent } from "../data/content";
+import SectionPrompt from "./SectionPrompt.astro";
 
 const { certifications } = siteContent;
 ---
 
 <section id="certifications" class="px-11 pb-[52px] pt-2 max-[920px]:px-[22px]">
-  <div class="section-label mb-[26px]">{certifications.label}</div>
+  <SectionPrompt title={certifications.title} path={certifications.path} cmd={certifications.cmd} class="mb-[26px]" />
   <div class="flex flex-wrap gap-2.5 font-mono text-[13px]">
-    {certifications.badges.map((badge) =>
-      badge.inProgress ? (
-        <span class="rounded-lg border border-dashed border-accent px-4 py-2.5 text-accent">
-          {badge.name} <span class="opacity-70">{badge.meta}</span>
+    {certifications.badges.map((badge) => {
+      const tone = badge.education
+        ? "border-tl-yellow/60 bg-tl-yellow/5 text-tl-yellow"
+        : badge.inProgress
+        ? "border-dashed border-green text-green"
+        : badge.muted
+          ? "border-line text-muted-2"
+          : "border-line-2 text-body";
+      const inner = (
+        <>
+          {badge.name}
+          {badge.meta && <span class:list={[badge.inProgress || badge.education ? "opacity-70" : "text-faint"]}> {badge.meta}</span>}
+          {badge.url && <span class="ml-1.5 text-[11px] text-faint transition-colors group-hover:text-accent" aria-hidden="true">verify ↗</span>}
+        </>
+      );
+      const popup = badge.image && (
+        <span
+          class="pointer-events-none absolute bottom-full left-1/2 z-20 mb-3 -translate-x-1/2 translate-y-2 scale-95 rounded-xl border border-accent/40 bg-band p-3 opacity-0 shadow-[0_14px_34px_rgba(0,0,0,0.5)] transition duration-200 group-hover:translate-y-0 group-hover:scale-100 group-hover:opacity-100 group-focus-visible:translate-y-0 group-focus-visible:scale-100 group-focus-visible:opacity-100"
+          aria-hidden="true"
+        >
+          <img src={badge.image} alt="" width="120" height="120" loading="lazy" decoding="async" class="block h-[120px] w-[120px]" />
         </span>
+      );
+      return badge.url ? (
+        <a
+          href={badge.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${badge.name}: verify on Credly (opens in a new tab)`}
+          class:list={["group relative rounded-lg border px-4 py-2.5 transition-colors hover:border-accent hover:text-accent", tone]}
+        >{popup}{inner}</a>
       ) : (
-        <span class="rounded-lg border border-line-2 px-4 py-2.5 text-body">
-          {badge.name}{badge.meta && <span class="text-faint"> {badge.meta}</span>}
-        </span>
-      )
-    )}
+        <span class:list={["rounded-lg border px-4 py-2.5", tone]}>{inner}</span>
+      );
+    })}
   </div>
 </section>

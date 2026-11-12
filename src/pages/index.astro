@@ -8,6 +8,7 @@ import About from "../components/About.astro";
 import Experience from "../components/Experience.astro";
 import Skills from "../components/Skills.astro";
 import Projects from "../components/Projects.astro";
+import CanaryDemo from "../components/CanaryDemo.astro";
 import Certifications from "../components/Certifications.astro";
 import Contact from "../components/Contact.astro";
 import { siteContent } from "../data/content";
@@ -47,6 +48,7 @@ const personSchema = {
 
 <BaseLayout>
   <script type="application/ld+json" set:html={JSON.stringify(personSchema)} is:inline />
+  <a href="#top" class="skip-link">skip to content</a>
   <Nav />
   <main id="top" class="relative mx-auto max-w-[1200px]">
     <Hero />
@@ -56,6 +58,7 @@ const personSchema = {
     <Experience />
     <Skills />
     <Projects />
+    <CanaryDemo />
     <Certifications />
     <Contact />
   </main>
