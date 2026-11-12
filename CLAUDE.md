@@ -6,28 +6,29 @@ Personal portfolio site at https://christophercorbin.cloud. Single-page (with a 
 
 ## Stack
 
-- **Frontend:** Astro 6 + Tailwind CSS v4 + React 19 (islands only — used for the contact form)
-- **Backend:** AWS Amplify Gen 2 backend (TypeScript Lambda + DynamoDB + SES) — *added in PR 2*
-- **Hosting:** AWS Amplify Hosting in account `590716168923`
-- **DNS:** Cloudflare (gray-cloud, OpenTofu-managed) — *cutover in PR 3*
-- **IaC:** OpenTofu (`terraform/` dir, S3 backend in `corbin-tfstate-prod`)
-- **CI:** GitHub Actions for lint/build/security/Lighthouse on PRs (Amplify handles deploys)
+- **Frontend:** Astro 6 + Tailwind CSS v4 + React 19 (islands only, used for the contact form)
+- **Backend:** AWS Amplify Gen 2 in `amplify/` (CDK): TypeScript Lambda behind a Function URL, DynamoDB, SES
+- **Hosting:** AWS Amplify Hosting in account `590716168923`; security and cache headers in `customHttp.yml`
+- **DNS:** Amazon Route 53 hosted zone, managed with OpenTofu in `chrisfixesit/tofu-or-not-tofu` (`accounts/management/dns`), not in this repo
+- **CI:** GitHub Actions `verify` job on PRs and main (`astro check` + build), plus CodeRabbit review (`.coderabbit.yaml`). Amplify handles deploys.
+
+Architecture diagram: `docs/architecture.drawio.png` (the PNG embeds the editable draw.io diagram). Update it when the architecture changes.
 
 ## Repository structure
 
 ```
 src/
-  pages/       # Astro routes — index.astro, resume.astro
+  pages/       # Astro routes: index.astro, resume.astro
   components/  # Astro section components + ContactForm React island
-  data/        # content.ts — all site copy as a structured TS object
+  data/        # content.ts: all site and résumé copy as a structured TS object
   layouts/     # BaseLayout.astro
   styles/      # global.css (Tailwind v4 @theme tokens + custom utilities)
 public/
-  images/
-  assets/      # Resume PDF
-amplify/       # Amplify Gen 2 backend (added in PR 2)
-terraform/     # OpenTofu modules (added in PR 3): cloudflare/, aws-amplify/, aws-monitoring/
+  images/      # incl. badges/ (local Credly badge images)
+amplify/       # Amplify Gen 2 backend: contact-form function, table, Function URL
+scripts/       # build helpers: write-contact-env.mjs, generate-og-image.mjs
 docs/
+  architecture.drawio.png
   superpowers/
     specs/     # Design specs
     plans/     # Implementation plans
@@ -68,7 +69,6 @@ npm run preview      # preview the built site
 
 - Design spec: `docs/superpowers/specs/2026-05-02-eportfolio-v2-greenfield-design.md`
 - PR 1 plan: `docs/superpowers/plans/2026-05-03-eportfolio-v2-pr1-bootstrap.md`
-- (PRs 2-4 plans added as they're written)
 
 ## Out of scope (intentional)
 
@@ -80,4 +80,4 @@ npm run preview      # preview the built site
 
 ## Old repo
 
-[chrisfixesit/AWS-eportfolio](https://github.com/chrisfixesit/AWS-eportfolio) is the v1 repo (will be archived in PR 4). It used multi-account S3+CloudFront+SAM. Don't reference its patterns — they don't apply here.
+v1 (`AWS-eportfolio`, no longer on GitHub) used multi-account S3+CloudFront+SAM. Don't reference its patterns; they don't apply here.
