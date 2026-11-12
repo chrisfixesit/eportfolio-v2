@@ -1,43 +1,81 @@
 # eportfolio-v2
 
-Personal portfolio site for Christopher Corbin — AWS Solutions Architect & Security Engineer.
+Portfolio and résumé site for Christopher Corbin, DevOps & Cloud Engineer.
 
-**Live:** https://christophercorbin.cloud
+**Live:** https://christophercorbin.cloud · **Résumé:** https://christophercorbin.cloud/resume
+
+![christophercorbin.cloud architecture: Route 53 and Amplify Hosting serve the site, a Lambda Function URL stores contact messages in DynamoDB and emails them via SES, and merges to main deploy through Amplify and CloudFormation](docs/architecture.drawio.png)
+
+> The PNG embeds the editable diagram. Open `docs/architecture.drawio.png` in [draw.io](https://app.diagrams.net) to change it.
+
+## How it works
+
+**Serving (1–2).** `christophercorbin.cloud` resolves through a Route 53 hosted zone, managed as code with OpenTofu in a separate infrastructure repo. Amplify Hosting serves the prebuilt Astro pages from the CDN edge. Security headers (HSTS, CSP, `X-Frame-Options`, `Permissions-Policy`) and long-lived caching for hashed assets are set in [`customHttp.yml`](customHttp.yml).
+
+**Contact form (3–5).** The form is the only client-side island (`ContactForm.tsx`). It posts JSON straight to a Lambda Function URL. CORS allows the site's two origins and `http://localhost:4321` for local dev. CORS only restricts browsers, though: the Function URL uses `NONE` auth, so direct requests (for example `curl`) still reach the function, and the handler's input validation is what protects it. The function validates the input and writes every message to DynamoDB first (on-demand, point-in-time recovery). Then SES emails it with Reply-To set to the sender. Email is best-effort: if SES fails, the message is still stored.
+
+**Delivery (6–8).** Pull requests run the `verify` workflow in GitHub Actions (`astro check` and a full build) and get a CodeRabbit review. A merge to `main` starts an Amplify build ([`amplify.yml`](amplify.yml)):
+
+1. `ampx pipeline-deploy` synthesizes the Amplify Gen 2 backend in [`amplify/`](amplify) (CDK), and CloudFormation creates or updates the function, its URL and the table.
+2. [`scripts/write-contact-env.mjs`](scripts/write-contact-env.mjs) reads the new Function URL from `amplify_outputs.json` and passes it to the build as `PUBLIC_CONTACT_API_URL`.
+3. `astro build` produces a static `dist/`, which Amplify publishes to Hosting.
 
 ## Stack
 
-- **Frontend:** Astro 6 + Tailwind CSS v4 + React 19 (islands only)
-- **Backend:** AWS Amplify Gen 2 (TypeScript Lambda + DynamoDB + SES) — *added in PR 2*
-- **Hosting:** AWS Amplify Hosting
-- **DNS:** Cloudflare (gray-cloud, OpenTofu-managed) — *cutover in PR 3*
-- **Infra:** OpenTofu (S3 backend in AWS account `590716168923`)
+| Layer | Tech |
+|---|---|
+| Frontend | Astro 6, Tailwind CSS v4, React 19 (contact form island only) |
+| Backend | Amplify Gen 2: TypeScript Lambda (Function URL), DynamoDB, SES |
+| Hosting | AWS Amplify Hosting |
+| DNS | Amazon Route 53, managed with OpenTofu |
+| CI | GitHub Actions (type check + build), CodeRabbit review |
+
+## Repository layout
+
+```
+src/
+  data/content.ts    # all site and résumé copy, in one typed object
+  components/        # one Astro component per section, plus ContactForm.tsx
+  pages/             # index.astro, resume.astro
+  styles/global.css  # Tailwind v4 @theme tokens and custom utilities
+amplify/             # Gen 2 backend: contact-form function, table, Function URL
+scripts/             # build helpers (contact URL injection, OG image)
+public/              # images, badges, résumé assets
+customHttp.yml       # security and cache headers at the CDN edge
+docs/                # architecture diagram, design specs and plans
+```
+
+To change any copy on the site or the résumé, edit [`src/data/content.ts`](src/data/content.ts). Components only render it.
 
 ## Local development
 
+Requires Node 22.12 or newer.
+
 ```bash
 npm install
-npm run dev          # http://localhost:4321
-npm run build        # production build to dist/
+npm run dev       # http://localhost:4321
+npm run build     # static build to dist/
+npm run preview   # serve the built site
 ```
 
-## Deployment
+`npm run dev` and `npm run build` don't set the contact API URL. Without `PUBLIC_CONTACT_API_URL`, the form falls back to opening a prefilled `mailto:` link instead of posting to the API. To test against a deployed backend, put its `amplify_outputs.json` in the repo root and run this once before starting Astro:
 
-Pushes to `main` automatically deploy to production via AWS Amplify Hosting.
-Pushes to `dev-*` branches automatically deploy to preview environments.
+```bash
+node scripts/write-contact-env.mjs   # appends PUBLIC_CONTACT_API_URL to .env
+```
+
+Each run appends another line to `.env`, so run it once or clear the old line first.
 
 ## Project history
 
-This is **v2** of `christophercorbin.cloud`. The previous version lived at
-[christophercorbin/AWS-eportfolio](https://github.com/christophercorbin/AWS-eportfolio)
-(now archived) and used a multi-account AWS setup with S3 + CloudFront +
-Python Lambda backend. v2 was rebuilt from scratch in May 2026 to:
+This is v2 of `christophercorbin.cloud`. v1 used a multi-account AWS setup with S3, CloudFront and a Python Lambda backend. v2 was rebuilt from scratch in May 2026 to:
 
-1. Eliminate the multi-account complexity (one account, one stack)
-2. Replace the bespoke S3 + CloudFront + cross-account invalidation setup with AWS Amplify Hosting
-3. Modernize the frontend (vanilla HTML → Astro + Tailwind + components)
-4. Capture all infrastructure state in OpenTofu (no more dashboard-only DNS)
+1. Run from one account and one stack instead of several
+2. Replace the hand-built S3, CloudFront and cross-account invalidation setup with Amplify Hosting
+3. Move the frontend from vanilla HTML to Astro, Tailwind and components
+4. Keep all infrastructure, DNS included, in code
 
-See `docs/superpowers/specs/` for the full design rationale.
+Design rationale lives in [`docs/superpowers/specs/`](docs/superpowers/specs/).
 
 ## License
 
