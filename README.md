@@ -12,7 +12,7 @@ Portfolio and résumé site for Christopher Corbin, DevOps & Cloud Engineer.
 
 **Serving (1–2).** `christophercorbin.cloud` resolves through a Route 53 hosted zone, managed as code with OpenTofu in a separate infrastructure repo. Amplify Hosting serves the prebuilt Astro pages from the CDN edge. Security headers (HSTS, CSP, `X-Frame-Options`, `Permissions-Policy`) and long-lived caching for hashed assets are set in [`customHttp.yml`](customHttp.yml).
 
-**Contact form (3–5).** The form is the only client-side island (`ContactForm.tsx`). It posts JSON straight to a Lambda Function URL, and CORS only allows the site's own origins. The function validates the input and writes every message to DynamoDB first (on-demand, point-in-time recovery). Then SES emails it with Reply-To set to the sender. Email is best-effort: if SES fails, the message is still stored.
+**Contact form (3–5).** The form is the only client-side island (`ContactForm.tsx`). It posts JSON straight to a Lambda Function URL. CORS allows the site's two origins and `http://localhost:4321` for local dev. CORS only restricts browsers, though: the Function URL uses `NONE` auth, so direct requests (for example `curl`) still reach the function, and the handler's input validation is what protects it. The function validates the input and writes every message to DynamoDB first (on-demand, point-in-time recovery). Then SES emails it with Reply-To set to the sender. Email is best-effort: if SES fails, the message is still stored.
 
 **Delivery (6–8).** Pull requests run the `verify` workflow in GitHub Actions (`astro check` and a full build) and get a CodeRabbit review. A merge to `main` starts an Amplify build ([`amplify.yml`](amplify.yml)):
 
@@ -58,7 +58,13 @@ npm run build     # static build to dist/
 npm run preview   # serve the built site
 ```
 
-Without `amplify_outputs.json`, the build skips the contact API URL. The site still runs, but the form has nowhere to send.
+`npm run dev` and `npm run build` don't set the contact API URL. Without `PUBLIC_CONTACT_API_URL`, the form falls back to opening a prefilled `mailto:` link instead of posting to the API. To test against a deployed backend, put its `amplify_outputs.json` in the repo root and run this once before starting Astro:
+
+```bash
+node scripts/write-contact-env.mjs   # appends PUBLIC_CONTACT_API_URL to .env
+```
+
+Each run appends another line to `.env`, so run it once or clear the old line first.
 
 ## Project history
 
