@@ -7,6 +7,7 @@ import { execSync } from "node:child_process";
 const { contact, footer } = siteContent;
 
 // Build stamp: Amplify exposes the deployed commit as AWS_COMMIT_ID; fall back to local git.
+// Manually started Amplify jobs set it to "HEAD", so only trust it when it's a real SHA.
 const gitHead = (): string => {
   try {
     return execSync("git rev-parse HEAD").toString().trim();
@@ -14,7 +15,8 @@ const gitHead = (): string => {
     return "";
   }
 };
-const commit = (process.env.AWS_COMMIT_ID ?? gitHead()).slice(0, 7);
+const amplifyCommit = process.env.AWS_COMMIT_ID ?? "";
+const commit = (/^[0-9a-f]{7,40}$/.test(amplifyCommit) ? amplifyCommit : gitHead()).slice(0, 7);
 const builtOn = new Date().toISOString().slice(0, 10);
 ---
 

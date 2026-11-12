@@ -14,8 +14,9 @@ customHeaders:
         value: 'camera=(), microphone=(), geolocation=(), payment=()'
       # Astro inlines small scripts/styles, so 'unsafe-inline' is required there;
       # connect-src https: covers the Amplify contact Lambda Function URL.
+      # font-src data: allows the small font subsets Vite inlines into the CSS.
       - key: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
   - pattern: '/_astro/*'
     headers:
       - key: Cache-Control
