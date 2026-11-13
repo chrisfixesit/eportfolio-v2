@@ -106,7 +106,9 @@ const runBtn =
 </section>
 
 <script>
-  import { formatClock, toWallMs, REPLAY_SPEED } from "../../lib/zdp/clock";
+  import { formatClock, toWallMs, REPLAY_SPEED, makeRng } from "../../lib/zdp/clock";
+  import { SCENARIOS, buildDeployScript } from "../../lib/zdp/deploy";
+  import type { DeployScenarioId, DeployScenario, StepState } from "../../lib/zdp/deploy";
 
   (() => {
     const root = document.getElementById("deploy");
@@ -209,7 +211,11 @@ const runBtn =
     };
 
     tabs.forEach((t, i) => {
-      t.addEventListener("click", () => activateTab(t.dataset.tab as TabId));
+      t.addEventListener("click", () => {
+        const id = t.dataset.tab as TabId;
+        if (id === activeTab) return;
+        activateTab(id);
+      });
       t.addEventListener("keydown", (e) => {
         const k = (e as KeyboardEvent).key;
         let to = -1;
@@ -236,9 +242,258 @@ const runBtn =
       })
     );
 
-    // Referenced so the skeleton type-checks until the tab tasks use them.
-    void token;
-    void sleep;
-    void beat;
+
+    // ---------- deploy tab ----------
+    const BLUE = "#4493f8";
+    const GREEN = "#2ea043";
+    const CRIT = "#f85149";
+    const WARN = "#ff9900";
+    const FAINT = "#76838f";
+
+    const dSplit = q("[data-split]")!;
+    const segBlue = q('[data-seg="blue"]')!;
+    const segGreen = q('[data-seg="green"]')!;
+    const pctBlue = q('[data-pct="blue"]')!;
+    const pctGreen = q('[data-pct="green"]')!;
+    const cellWrap = q("[data-cells]")!;
+    const cells = qa("[data-cell]");
+    const servedEl = q('[data-count="served"]')!;
+    const failedEl = q('[data-count="failed"]')!;
+    const greenEl = q('[data-count="green"]')!;
+    const blastEl = q("[data-blast]")!;
+    const logEl = q("[data-log]")!;
+    const outcomeEl = q("[data-outcome]")!;
+    const nowTitle = q("[data-now-title]")!;
+    const nowWhy = q("[data-now-why]")!;
+    const nowFact = q("[data-now-fact]")!;
+    const NOW_IDLE = nowWhy.textContent?.trim() ?? "";
+    const mErr = q('[data-metric="err"]')!;
+    const mState = q('[data-metric="state"]')!;
+    const gaugeName = q("[data-gauge-name]")!;
+    const legendBlue = q('[data-legend="blue"]')!;
+    const legendGreen = q('[data-legend="green"]')!;
+    const prMinus = q("[data-pr-minus]")!;
+    const prPlus = q("[data-pr-plus]")!;
+    const prCheck = q("[data-pr-check]")!;
+
+    const MARK: Record<StepState, string> = { idle: "○", run: "◐", ok: "●", fail: "✕", skip: "–" };
+    const digestBySha: Record<string, string> = {};
+    Object.values(SCENARIOS).forEach((sc) => sc.ladder.forEach((r) => (digestBySha[r.sha] = r.digest12)));
+
+    let rnd = makeRng(1);
+    let clock = 0;
+    let nServed = 0;
+    let nFailed = 0;
+    let nGreen = 0;
+    let idx = 0;
+    let cur: DeployScenario = SCENARIOS.good;
+
+    const setSplit = (g: number) => {
+      segBlue.style.width = `${100 - g}%`;
+      segGreen.style.width = `${g}%`;
+      pctBlue.textContent = `${100 - g}%`;
+      pctGreen.textContent = `${g}%`;
+      dSplit.setAttribute(
+        "aria-label",
+        `User traffic: blue ${cur.blueSha} ${100 - g} percent, green ${cur.greenSha} ${g} percent`
+      );
+    };
+
+    const setMetrics = (count: string, state: string, breach = false) => {
+      mErr.textContent = count;
+      mState.textContent = state;
+      mErr.style.color = breach ? CRIT : "";
+      mState.style.color = breach ? CRIT : "";
+    };
+
+    const applyScenario = (sc: DeployScenario) => {
+      cur = sc;
+      legendBlue.textContent = `blue (users are on) · ${sc.blueSha}`;
+      legendGreen.textContent = `green (incoming) · ${sc.greenSha}`;
+      gaugeName.textContent = sc.alarmName;
+      sc.ladder.forEach((r) => {
+        const li = q(`[data-rung="${r.env}"]`);
+        if (!li) return;
+        q(`[data-rung="${r.env}"] [data-rung-sha]`)!.textContent = r.sha;
+        q(`[data-rung="${r.env}"] [data-rung-note]`)!.textContent = r.note;
+        q(`[data-rung="${r.env}"] [data-rung-digest]`)!.textContent = `⌕ ${r.digest12}`;
+        if (r.active) li.setAttribute("data-rung-active", "");
+        else li.removeAttribute("data-rung-active");
+      });
+      prMinus.textContent = sc.prDiff.minus;
+      prPlus.textContent = sc.prDiff.plus;
+      prCheck.textContent = sc.prDiff.check;
+      setSplit(0);
+    };
+
+    const setStep = (id: string, state: StepState) => {
+      const li = q(`[data-step="${id}"]`);
+      if (!li) return;
+      li.dataset.state = state;
+      const name = li.querySelector("[data-step-name]")?.textContent ?? "";
+      (li.querySelector("[data-marker]") as HTMLElement).textContent = MARK[state];
+      li.setAttribute("aria-label", `${name}: ${state}`);
+    };
+
+    const showNow = (title: string, why: string, fact?: string) => {
+      nowTitle.textContent = title;
+      nowWhy.textContent = why;
+      nowFact.textContent = fact ?? "";
+      nowFact.hidden = !fact;
+    };
+
+    const stamp = (at?: number) => {
+      clock = at ?? clock + 7 + Math.floor(rnd() * 11);
+      setClock(clock);
+      return formatClock(clock);
+    };
+
+    const say = (text: string, tone?: "ok" | "warn" | "crit", at?: number) => {
+      const line = document.createElement("div");
+      const t = document.createElement("span");
+      t.style.color = FAINT;
+      t.textContent = stamp(at);
+      const body = document.createElement("span");
+      body.style.color = tone === "ok" ? GREEN : tone === "crit" ? CRIT : tone === "warn" ? WARN : "";
+      body.textContent = text;
+      line.append(t, " ", body);
+      logEl.appendChild(line);
+      logEl.scrollTop = logEl.scrollHeight;
+    };
+
+    const paint = (kind: "blue" | "green" | "fail") => {
+      if (idx >= cells.length) return;
+      const c = cells[idx++];
+      if (kind === "fail") {
+        c.style.background = CRIT;
+        c.title = `500 · green ${cur.greenSha}`;
+        nFailed++;
+        nGreen++;
+      } else {
+        c.style.background = kind === "blue" ? BLUE : GREEN;
+        c.title = kind === "blue" ? `200 · blue ${cur.blueSha}` : `200 · green ${cur.greenSha}`;
+        nServed++;
+        if (kind === "green") nGreen++;
+      }
+      servedEl.textContent = String(nServed);
+      failedEl.textContent = String(nFailed);
+      greenEl.textContent = String(nGreen);
+      failedEl.style.color = nFailed > 0 ? CRIT : "";
+      cellWrap.setAttribute("aria-label", `${nServed + nFailed} requests: ${nServed} served, ${nFailed} failed`);
+    };
+
+    const finish = (glyph: string, text: string, color: string, note: string) => {
+      outcomeEl.textContent = "";
+      const head = document.createElement("div");
+      head.style.color = color;
+      head.textContent = `${glyph} ${text.replace("{served}", String(nServed)).replace("{failed}", String(nFailed))}`;
+      const sub = document.createElement("div");
+      sub.className = "mt-1 text-[12px] leading-snug";
+      sub.style.color = "#8b97a3";
+      sub.textContent = note;
+      outcomeEl.append(head, sub);
+    };
+
+    const resetDeploy = () => {
+      rnd = makeRng(1);
+      clock = 0;
+      nServed = nFailed = nGreen = idx = 0;
+      applyScenario(SCENARIOS.good);
+      cells.forEach((c) => {
+        c.style.background = "";
+        c.removeAttribute("title");
+      });
+      cellWrap.setAttribute("aria-label", "No requests yet");
+      servedEl.textContent = "0";
+      failedEl.textContent = "0";
+      greenEl.textContent = "0";
+      failedEl.style.color = "";
+      blastEl.textContent = "";
+      blastEl.style.color = "";
+      setMetrics("–", "–");
+      qa("[data-strip] [data-step]").forEach((li) => setStep(li.dataset.step!, "idle"));
+      showNow("", NOW_IDLE);
+      logEl.textContent = "";
+      const ready = document.createElement("div");
+      ready.className = "text-faint";
+      ready.textContent = "ready: pick a scenario above.";
+      logEl.appendChild(ready);
+      outcomeEl.textContent = "";
+      const wait = document.createElement("span");
+      wait.className = "text-ghost";
+      wait.textContent = "awaiting a run";
+      outcomeEl.appendChild(wait);
+    };
+    resetAll.deploy = resetDeploy;
+
+    q("[data-next]")?.addEventListener("click", () => advance?.());
+
+    async function playDeploy(id: string) {
+      doReset();
+      const me = token;
+      const alive = () => me === token;
+      const sc = SCENARIOS[id as DeployScenarioId];
+      if (!sc) return;
+      applyScenario(sc);
+      setBusy(true, id);
+      logEl.textContent = "";
+      let canaryAt = 0;
+
+      for (const ev of buildDeployScript(sc.id)) {
+        switch (ev.t) {
+          case "step":
+            setStep(ev.id, ev.state);
+            if (ev.id === "canary" && ev.state === "run") canaryAt = clock;
+            break;
+          case "say":
+            say(ev.text, ev.tone, ev.at ?? (ev.atFromCanary !== undefined ? canaryAt + ev.atFromCanary : undefined));
+            break;
+          case "split":
+            setSplit(ev.green);
+            break;
+          case "stream":
+            for (let i = 0; i < ev.n; i++) {
+              const toGreen = rnd() * 100 < ev.greenPct;
+              if (toGreen && rnd() < (ev.errRate ?? 0)) paint("fail");
+              else paint(toGreen ? "green" : "blue");
+              await sleep(0.76);
+              if (!alive()) return;
+            }
+            break;
+          case "metrics":
+            setMetrics(ev.count, ev.state, ev.breach);
+            break;
+          case "beat":
+            await beat();
+            if (!alive()) return;
+            break;
+          case "sleep":
+            await sleep(ev.drillSeconds);
+            if (!alive()) return;
+            break;
+          case "now":
+            showNow(ev.title, ev.why, ev.fact);
+            break;
+          case "finish":
+            finish(ev.glyph, ev.text, ev.tone === "ok" ? GREEN : WARN, ev.note);
+            break;
+          case "ladder": {
+            const li = q(`[data-rung="${ev.env}"]`);
+            if (!li) break;
+            const recorded = ev.note.startsWith("last-good");
+            li.querySelector("[data-rung-sha]")!.textContent = `${recorded ? "● " : ""}${ev.sha}`;
+            li.querySelector("[data-rung-note]")!.textContent = ev.note;
+            li.querySelector("[data-rung-digest]")!.textContent = `⌕ ${digestBySha[ev.sha] ?? ""}`;
+            break;
+          }
+          case "blast":
+            blastEl.textContent = ev.text;
+            blastEl.style.color = WARN;
+            break;
+        }
+      }
+      setBusy(false);
+    }
+    play.deploy = playDeploy;
   })();
 </script>
