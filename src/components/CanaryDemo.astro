@@ -2,46 +2,133 @@
 import SectionPrompt from "./SectionPrompt.astro";
 
 /**
- * Zero-Downtime Pipeline — an interactive walkthrough of the project's own
- * blue/green deploy. Simulated from the pipeline's real CodeDeploy setup:
- * ECS Fargate task sets, a test-listener health gate, a 10% canary, and
- * CloudWatch alarm-triggered auto-rollback.
+ * Zero-Downtime Pipeline: an interactive replay of a staging deploy. Simulated
+ * from the pipeline's real CodeDeploy setup (infra/main.tf, infra/env/main.tf):
+ * ECS Fargate task sets, the AfterAllowTestTraffic smoke hook on the test
+ * listener, ECSCanary10Percent5Minutes, and the per-environment
+ * zdp-<env>-target-5xx alarm (5+ target 5xx in one minute) that rolls back.
  *
  * Categorical colours (blue #4493f8 / green #2ea043) are validated for CVD
  * separation and contrast against the #0b0f14 band surface. Failures use the
  * reserved critical colour and are always labelled in text as well.
  */
+const BLUE_SHA = "4f1c2ab";
+const GREEN_SHA = "9e07d3b";
+
+// what: plain English for anyone; why: what would go wrong without the step
 const steps = [
-  { id: "install", name: "Install", detail: "register the green task set" },
-  { id: "test", name: "AllowTestTraffic", detail: "health-check green on the test listener" },
-  { id: "canary", name: "ShiftTraffic", detail: "10% of production traffic to green" },
-  { id: "bake", name: "Monitor", detail: "CloudWatch watches error rate and latency" },
-  { id: "full", name: "ShiftTraffic", detail: "remaining 90% to green" },
-  { id: "done", name: "Terminate", detail: "drain and stop the blue task set" },
+  {
+    id: "install",
+    name: "Install",
+    what: "start the new build beside the live one; it must answer /healthz before it counts",
+    why: "Users stay on the current version the whole time, and a build that can't even start never gets near them.",
+  },
+  {
+    id: "test",
+    name: "AllowTestTraffic",
+    what: "the new build gets a test door (:9082); users keep the normal door (:8082)",
+    why: "The new build can be tried for real before any customer is sent to it.",
+  },
+  {
+    id: "smoke",
+    name: "AfterAllowTestTraffic",
+    what: "smoke test: a Lambda checks /healthz and that / reports the exact commit",
+    why: "It catches a build that starts but is wrong. In a live drill it caught one reporting version \"dev\", and no user ever reached it.",
+  },
+  {
+    id: "canary",
+    name: "AllowTraffic 10%",
+    what: "one in ten user requests goes to the new build",
+    why: "If something only breaks under real use, only a tenth of requests see it, and only briefly.",
+  },
+  {
+    id: "bake",
+    name: "5-minute watch",
+    what: "an alarm counts server errors on both builds; 5 or more in a minute rolls back",
+    why: "It catches what a scripted check can't, and undoes it without anyone waking up. The alarm stays armed for the whole deploy.",
+  },
+  {
+    id: "full",
+    name: "AllowTraffic 100%",
+    what: "everyone moves; the old build keeps running 5 more minutes",
+    why: "If a late problem shows up, rolling back is instant because the old build is still there.",
+  },
+  {
+    id: "done",
+    name: "Record last-good",
+    what: "write \"this exact build ran cleanly here\" to SSM Parameter Store",
+    why: "Only a recorded build can be promoted to prod, so a failed or rolled-back build can't move on by mistake.",
+  },
 ];
 
 const scenarios = [
   { id: "healthy", label: "▶ ship a good build", hint: "the happy path" },
-  { id: "unhealthy", label: "✕ ship a broken build", hint: "caught at the health gate" },
-  { id: "degrades", label: "⚠ ship one that degrades under load", hint: "caught by the alarm" },
+  { id: "unhealthy", label: "✕ ship a broken build", hint: "caught by the smoke test" },
+  { id: "degrades", label: "⚠ ship one that breaks under load", hint: "caught by the alarm" },
+];
+
+const glossary = [
+  ["Blue / green", "two copies side by side: blue is the version users are on, green is the new one."],
+  ["Canary", "send a small share of traffic (here 10%) to the new version first, so a problem hits few people."],
+  ["Rollback", "put everyone back on the previous version. Here it happens automatically."],
+  ["5xx", "server errors, like 500. The alarm counts these."],
+  ["Digest", "a fingerprint of the exact image bytes, so prod runs exactly what was tested."],
+];
+
+const promotion = [
+  "Each merge builds one container image. That same image, by digest, moves sandbox → staging → prod. Nothing is rebuilt on the way.",
+  "Promoting is a pull request that changes one small file naming the commit and digest. A code owner must approve, and merging it deploys.",
+  "A required check blocks the pull request unless that exact build has a last-good record in the stage before. In a live test, a PR with an edited digest was blocked.",
+  "Rolling back is the same kind of pull request, pointing at an earlier build. Prod rolled back in 13 minutes from merge.",
+  "An hourly drift check compares what the files ask for with what is actually running, in every environment.",
 ];
 
 const CELLS = 120;
 ---
 
-<section id="deploy" class="border-y border-line bg-band px-11 py-[52px] max-[920px]:px-[22px]">
+<section id="deploy" data-blue={BLUE_SHA} data-green={GREEN_SHA} class="border-y border-line bg-band px-11 py-[52px] max-[920px]:px-[22px]">
   <SectionPrompt title="The deploy, step by step" path="~/zero-downtime-pipeline" cmd="./deploy.sh --watch" class="mb-3" />
-  <p class="mb-7 max-w-[680px] text-[15px] leading-relaxed text-muted">
-    Every project on this page ships through the same pipeline. Rather than claim it's
-    zero-downtime, here it is — run a deploy and watch what happens when the build is good,
-    when it's broken, and when it only falls over under real traffic.
+  <p class="mb-4 max-w-[680px] text-[15px] leading-relaxed text-muted">
+    This is the Zero-Downtime Pipeline project, replayed in your browser: a deploy to staging,
+    step by step. Ship a good build, one that fails the smoke test, and one that only breaks
+    under traffic. Each step explains what it does and why it's there.
   </p>
+
+  <div class="mb-7 flex max-w-[680px] flex-col gap-2">
+    <details class="group">
+      <summary class="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[13px] text-accent hover:underline [&::-webkit-details-marker]:hidden">
+        <span class="inline-block transition-transform group-open:rotate-90" aria-hidden="true">▸</span>
+        new to this? the terms in plain English
+      </summary>
+      <dl class="m-0 mt-2.5 grid grid-cols-[112px_1fr] gap-x-4 gap-y-2 text-[14px] leading-snug max-[420px]:grid-cols-1 max-[420px]:gap-y-0.5">
+        {glossary.map(([term, def]) => (
+          <>
+            <dt class="font-mono text-[13px] text-ink max-[420px]:mt-2">{term}</dt>
+            <dd class="m-0 text-muted">{def}</dd>
+          </>
+        ))}
+      </dl>
+    </details>
+    <details class="group">
+      <summary class="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[13px] text-accent hover:underline [&::-webkit-details-marker]:hidden">
+        <span class="inline-block transition-transform group-open:rotate-90" aria-hidden="true">▸</span>
+        after staging: how a build reaches prod
+      </summary>
+      <ul class="m-0 mt-2.5 grid list-none gap-1.5 p-0 text-[14px] leading-snug text-muted">
+        {promotion.map((p) => (
+          <li class="grid grid-cols-[14px_1fr] gap-1.5">
+            <span class="font-mono text-faint" aria-hidden="true">▸</span><span>{p}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
+  </div>
 
   <div class="overflow-hidden rounded-xl border border-line bg-surface">
     <!-- titlebar -->
     <div class="flex flex-wrap items-center gap-2 border-b border-line px-4 py-[11px] font-mono text-xs text-faint">
       <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true"></span>
-      codedeploy — blue/green · ecs fargate · zero-downtime-pipeline
+      codedeploy · blue/green · ecs fargate · staging
     </div>
 
     <!-- controls -->
@@ -57,8 +144,15 @@ const CELLS = 120;
       ))}
       <button
         type="button"
+        data-stepmode
+        aria-pressed="false"
+        title="pause after each step until you press next"
+        class="ml-auto rounded-md border border-line px-3 py-2 font-mono text-xs text-faint transition-colors hover:border-line-2 hover:text-body aria-pressed:border-accent aria-pressed:text-accent"
+      ><span aria-hidden="true">⏸</span> step through</button>
+      <button
+        type="button"
         data-run="reset"
-        class="ml-auto rounded-md border border-line px-3 py-2 font-mono text-xs text-faint transition-colors hover:border-line-2 hover:text-body"
+        class="rounded-md border border-line px-3 py-2 font-mono text-xs text-faint transition-colors hover:border-line-2 hover:text-body"
       >↺ reset</button>
     </div>
 
@@ -66,7 +160,7 @@ const CELLS = 120;
       <!-- left: traffic + requests -->
       <div class="border-r border-line px-5 py-5 max-[920px]:border-r-0 max-[920px]:border-b">
         <div class="mb-2.5 font-mono text-xs text-faint">
-          # production traffic
+          # user traffic, by version
         </div>
 
         <!-- 100% stacked split, 2px surface gap between segments -->
@@ -79,11 +173,11 @@ const CELLS = 120;
         <div class="mt-2.5 flex flex-wrap gap-x-5 gap-y-1 font-mono text-xs">
           <span class="flex items-center gap-2 text-body">
             <span class="h-2.5 w-2.5 rounded-[3px]" style="background:#4493f8" aria-hidden="true"></span>
-            blue · v1.4.2 <span class="tabular-nums text-ink" data-pct="blue">100%</span>
+            blue (live) · {BLUE_SHA} <span class="tabular-nums text-ink" data-pct="blue">100%</span>
           </span>
           <span class="flex items-center gap-2 text-body">
             <span class="h-2.5 w-2.5 rounded-[3px]" style="background:#2ea043" aria-hidden="true"></span>
-            green · v1.5.0 <span class="tabular-nums text-ink" data-pct="green">0%</span>
+            green (new) · {GREEN_SHA} <span class="tabular-nums text-ink" data-pct="green">0%</span>
           </span>
         </div>
 
@@ -102,60 +196,77 @@ const CELLS = 120;
         </div>
 
         <div class="mb-2.5 mt-6 font-mono text-xs text-faint">
-          # cloudwatch · green task set
+          # cloudwatch · zdp-staging-target-5xx
         </div>
         <dl class="grid grid-cols-[104px_1fr_auto] items-baseline gap-x-4 gap-y-2 font-mono text-xs max-[420px]:grid-cols-[96px_1fr] max-[420px]:gap-y-1 [&>dd:nth-of-type(even)]:max-[420px]:col-start-2 [&>dd:nth-of-type(even)]:max-[420px]:mb-1.5">
-          <dt class="text-muted-2">ErrorRate</dt>
-          <dd class="tabular-nums text-ink" data-metric="err">—</dd>
-          <dd class="text-ghost">alarm &gt; 1.00%</dd>
-          <dt class="text-muted-2">p99 latency</dt>
-          <dd class="tabular-nums text-ink" data-metric="p99">—</dd>
-          <dd class="text-ghost">alarm &gt; 1.50s</dd>
+          <dt class="text-muted-2">5xx / minute</dt>
+          <dd class="tabular-nums text-ink" data-metric="err">–</dd>
+          <dd class="text-ghost">alarm at 5 or more</dd>
+          <dt class="text-muted-2">state</dt>
+          <dd class="tabular-nums text-ink" data-metric="state">–</dd>
+          <dd class="text-ghost">blue + green</dd>
         </dl>
       </div>
 
-      <!-- right: lifecycle -->
+      <!-- right: steps -->
       <div class="px-5 py-5">
         <div class="mb-3 font-mono text-xs text-faint">
-          # codedeploy lifecycle
+          # deploy, step by step <span class="text-ghost">· tap a step for why</span>
         </div>
-        <ol class="flex flex-col gap-2.5">
+        <ol class="m-0 flex list-none flex-col gap-2.5 p-0">
           {steps.map((s) => (
-            <li class="grid grid-cols-[16px_1fr] items-start gap-3" data-step={s.id} data-state="idle">
+            <li class="grid grid-cols-[16px_1fr] items-start gap-3" data-step={s.id} data-why={s.why} data-state="idle">
               <span class="mt-[3px] flex h-4 w-4 items-center justify-center font-mono text-[11px]" data-marker aria-hidden="true">○</span>
-              <span>
-                <span class="font-mono text-[13px] text-body" data-step-name>{s.name}</span>
-                <span class="block text-[12.5px] leading-snug text-muted-2" data-step-detail>{s.detail}</span>
-              </span>
+              <details class="group">
+                <summary class="cursor-pointer list-none [&::-webkit-details-marker]:hidden">
+                  <span class="font-mono text-[13px] text-body" data-step-name>{s.name}</span>
+                  <span class="ml-1.5 font-mono text-[11px] text-ghost group-open:hidden" aria-hidden="true">why ▸</span>
+                  <span class="block text-[12.5px] leading-snug text-muted-2" data-step-detail>{s.what}</span>
+                </summary>
+                <p class="m-0 mt-1 border-l-2 border-line-2 pl-2.5 text-[12.5px] leading-snug text-body">{s.why}</p>
+              </details>
             </li>
           ))}
         </ol>
+        <div class="mt-4 flex items-start gap-3 rounded-md border border-line px-3 py-2.5">
+          <p class="m-0 flex-1 text-[13px] leading-snug text-muted" data-now aria-live="polite">
+            Pick a scenario above. Each step explains itself here as it runs.
+          </p>
+          <button
+            type="button"
+            data-next
+            hidden
+            aria-disabled="true"
+            class="shrink-0 rounded-md border border-accent px-3 py-1.5 font-mono text-xs text-accent transition-colors hover:bg-accent/10 aria-disabled:border-line aria-disabled:text-faint aria-disabled:hover:bg-transparent"
+          >next ▸</button>
+        </div>
       </div>
     </div>
 
     <!-- console -->
     <div class="border-t border-line bg-band px-5 py-4">
       <div
-        class="h-[132px] overflow-y-auto font-mono text-[12px] leading-[1.75] text-muted-2"
+        class="h-[132px] overflow-y-auto font-mono max-[920px]:h-[224px] text-[12px] leading-[1.75] text-muted-2"
         data-log
         role="log"
         tabindex="0"
-        aria-label="Deploy console output"
+        aria-label="Console output"
       >
-        <div class="text-faint">ready — pick a deploy above.</div>
+        <div class="text-faint">ready: pick a scenario above.</div>
       </div>
     </div>
 
     <!-- outcome -->
     <div class="border-t border-line px-5 py-4 font-mono text-[13px] text-faint" data-outcome>
-      <span class="text-ghost">awaiting deploy</span>
+      <span class="text-ghost">awaiting a run</span>
     </div>
   </div>
 
   <p class="mt-3.5 max-w-[680px] font-mono text-[11.5px] leading-relaxed text-ghost">
-    Simulated from the pipeline's real configuration — ECS Fargate task sets, a test-listener
-    health gate, a 10% canary, and CloudWatch alarm rollback, all defined in OpenTofu.
-    Timings are compressed.
+    Simulated from the pipeline's real configuration: ECS Fargate task sets, a smoke-test
+    hook on the test listener, a 10% / 5-minute canary, and a CloudWatch 5xx alarm that
+    rolls back, all defined in OpenTofu. Commits are illustrative and timings are
+    compressed, except where a line cites a drill.
   </p>
 </section>
 
@@ -163,6 +274,8 @@ const CELLS = 120;
   (() => {
     const root = document.getElementById("deploy");
     if (!root) return;
+    const BLUE_SHA = root.dataset.blue ?? "blue";
+    const GREEN_SHA = root.dataset.green ?? "green";
 
     const q = (s: string) => root.querySelector(s) as HTMLElement | null;
     const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
@@ -170,6 +283,8 @@ const CELLS = 120;
     const BLUE = "#4493f8";
     const GREEN = "#2ea043";
     const CRIT = "#f85149";
+    const WARN = "#ff9900";
+    const FAINT = "#76838f";
 
     const segBlue = q('[data-seg="blue"]')!;
     const segGreen = q('[data-seg="green"]')!;
@@ -183,12 +298,50 @@ const CELLS = 120;
     const log = q("[data-log]")!;
     const outcome = q("[data-outcome]")!;
     const splitWrap = q("[data-split]")!;
+    const now = q("[data-now]")!;
+    const NOW_IDLE = now.textContent?.trim() ?? "";
+    const nextBtn = q("[data-next]")!;
+    const stepToggle = q("[data-stepmode]")!;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let token = 0;
     let clock = 0;
+    let busy = false;
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, reduce ? 0 : ms));
+
+    // Between steps: a pause long enough to read the step's "why" line, or in
+    // step-through mode, a wait for the next button.
+    const PAUSE_MS = 2400;
+    let stepMode = false;
+    let advance: (() => void) | null = null;
+    const beat = (): Promise<unknown> => {
+      if (!stepMode) return sleep(PAUSE_MS);
+      nextBtn.setAttribute("aria-disabled", "false");
+      return new Promise<void>((r) => {
+        advance = () => {
+          advance = null;
+          nextBtn.setAttribute("aria-disabled", "true");
+          r();
+        };
+      });
+    };
+    nextBtn.addEventListener("click", () => advance?.());
+
+    // Hiding a focused button drops focus to <body>, so hand it to the toggle first.
+    const showNext = (on: boolean) => {
+      if (!on && document.activeElement === nextBtn) stepToggle.focus();
+      nextBtn.hidden = !on;
+      nextBtn.setAttribute("aria-disabled", "true");
+    };
+
+    stepToggle.addEventListener("click", () => {
+      stepMode = !stepMode;
+      stepToggle.setAttribute("aria-pressed", String(stepMode));
+      if (busy) showNext(stepMode);
+      // switching it off mid-wait lets the run carry on by itself
+      if (!stepMode) advance?.();
+    });
 
     // deterministic pseudo-random so a replay looks the same
     let seed = 1;
@@ -201,23 +354,24 @@ const CELLS = 120;
       pctGreen.textContent = `${g}%`;
       splitWrap.setAttribute(
         "aria-label",
-        `Production traffic: blue v1.4.2 ${100 - g} percent, green v1.5.0 ${g} percent`
+        `User traffic: blue ${BLUE_SHA} ${100 - g} percent, green ${GREEN_SHA} ${g} percent`
       );
     };
 
-    const stamp = () => {
-      clock += 7 + Math.floor(rnd() * 11);
+    // at: an exact clock time in seconds, for lines that cite a real duration
+    const stamp = (at?: number) => {
+      clock = at ?? clock + 7 + Math.floor(rnd() * 11);
       const m = String(Math.floor(clock / 60)).padStart(2, "0");
       const s = String(clock % 60).padStart(2, "0");
       return `${m}:${s}`;
     };
 
-    const say = (text: string, tone: "" | "ok" | "warn" | "crit" = "") => {
+    const say = (text: string, tone: "" | "ok" | "warn" | "crit" = "", at?: number) => {
       const line = document.createElement("div");
       const color =
-        tone === "ok" ? "color:#2ea043" : tone === "crit" ? `color:${CRIT}` : tone === "warn" ? "color:#ff9900" : "";
+        tone === "ok" ? `color:${GREEN}` : tone === "crit" ? `color:${CRIT}` : tone === "warn" ? `color:${WARN}` : "";
       line.innerHTML =
-        `<span style="color:#76838f">${stamp()}</span> ` +
+        `<span style="color:${FAINT}">${stamp(at)}</span> ` +
         `<span style="${color}"></span>`;
       (line.lastElementChild as HTMLElement).textContent = text;
       log.appendChild(line);
@@ -225,21 +379,29 @@ const CELLS = 120;
     };
 
     const mErr = q('[data-metric="err"]')!;
-    const mP99 = q('[data-metric="p99"]')!;
-    const setMetrics = (err: string, p99: string, breach = false) => {
-      mErr.textContent = err;
-      mP99.textContent = p99;
+    const mState = q('[data-metric="state"]')!;
+    // 5xx count in the alarm's one-minute period, and the alarm state
+    const setMetrics = (count: string, state: string, breach = false) => {
+      mErr.textContent = count;
+      mState.textContent = state;
       mErr.style.color = breach ? CRIT : "";
-      mP99.style.color = breach ? "#ff9900" : "";
+      mState.style.color = breach ? CRIT : "";
     };
 
-    const FAINT = "#76838f";
     const MARK: Record<string, [string, string]> = {
       idle: ["○", FAINT],
-      run: ["◐", "#ff9900"],
-      ok: ["●", "#2ea043"],
+      run: ["◐", WARN],
+      ok: ["●", GREEN],
       fail: ["✕", CRIT],
       skip: ["–", FAINT],
+    };
+
+    const showNow = (name: string, why: string) => {
+      now.textContent = "";
+      const b = document.createElement("strong");
+      b.className = "font-mono text-[12.5px] font-normal text-ink";
+      b.textContent = `${name}: `;
+      now.append(b, why);
     };
 
     const step = (id: string, state: keyof typeof MARK) => {
@@ -252,11 +414,12 @@ const CELLS = 120;
       const [glyph, color] = MARK[state];
       marker.textContent = glyph;
       marker.style.color = color;
-      // No opacity dimming — it multiplies contrast below AA. Skipped steps get an
+      // No opacity dimming: it multiplies contrast below AA. Skipped steps get an
       // explicit AA-passing grey instead.
       name.style.color = state === "idle" ? "" : state === "skip" ? FAINT : color;
       detail.style.color = state === "skip" ? FAINT : "";
       li.setAttribute("aria-label", `${name.textContent}: ${state}`);
+      if (state === "run") showNow(name.textContent ?? "", li.dataset.why ?? "");
     };
 
     let nServed = 0;
@@ -268,11 +431,11 @@ const CELLS = 120;
       const c = cells[idx++];
       if (kind === "fail") {
         c.style.background = CRIT;
-        c.title = "failed — served by the degraded green task set";
+        c.title = `500 · green ${GREEN_SHA}`;
         nFailed++;
       } else {
         c.style.background = kind === "blue" ? BLUE : GREEN;
-        c.title = kind === "blue" ? "200 — blue v1.4.2" : "200 — green v1.5.0";
+        c.title = kind === "blue" ? `200 · blue ${BLUE_SHA}` : `200 · green ${GREEN_SHA}`;
         nServed++;
       }
       served.textContent = String(nServed);
@@ -296,6 +459,8 @@ const CELLS = 120;
 
     const reset = () => {
       token++;
+      // release a run parked at a step-through gate; its alive() check then ends it
+      advance?.();
       clock = 0;
       seed = 1;
       nServed = nFailed = idx = 0;
@@ -310,12 +475,11 @@ const CELLS = 120;
       failed.style.color = "";
       blast.textContent = "";
       blast.style.color = "";
-      setMetrics("—", "—");
-      Object.keys({ install: 1, test: 1, canary: 1, bake: 1, full: 1, done: 1 }).forEach((id) =>
-        step(id, "idle")
-      );
-      log.innerHTML = '<div style="color:#76838f">ready — pick a deploy above.</div>';
-      outcome.innerHTML = '<span style="color:#76838f">awaiting deploy</span>';
+      setMetrics("–", "–");
+      qa("[data-step]").forEach((li) => step(li.dataset.step!, "idle"));
+      now.textContent = NOW_IDLE;
+      log.innerHTML = `<div style="color:${FAINT}">ready: pick a scenario above.</div>`;
+      outcome.innerHTML = `<span style="color:${FAINT}">awaiting a run</span>`;
     };
 
     const finish = (glyph: string, text: string, color: string, note?: string) => {
@@ -335,12 +499,14 @@ const CELLS = 120;
 
     // Marks which scenario is running. Buttons are never disabled: disabling the
     // control that was just activated throws keyboard focus back to <body>.
-    const setBusy = (busy: boolean, kind?: string) => {
+    const setBusy = (on: boolean, kind?: string) => {
+      busy = on;
       qa("[data-run]").forEach((b) => {
         if (b.dataset.run === "reset") return;
-        b.setAttribute("aria-pressed", String(busy && b.dataset.run === kind));
+        b.setAttribute("aria-pressed", String(on && b.dataset.run === kind));
       });
-      root!.setAttribute("aria-busy", String(busy));
+      root!.setAttribute("aria-busy", String(on));
+      showNext(on && stepMode);
     };
 
     async function play(kind: string) {
@@ -349,115 +515,140 @@ const CELLS = 120;
       const alive = () => me === token;
       setBusy(true, kind);
 
-      say("push to main — OIDC role assumed, no static keys in CI");
+      // drop the idle "ready" line so the log is only this run
+      log.innerHTML = "";
+
+      say(`promotion PR merged: deploy ${GREEN_SHA} to staging, pinned by image digest`);
+      say("OIDC: assumed the staging deploy role, no stored AWS keys in CI");
       await sleep(500);
       if (!alive()) return;
 
       step("install", "run");
-      say("registering green task set v1.5.0 on ECS Fargate");
-      await sleep(900);
+      say(`starting green ${GREEN_SHA} on ECS Fargate · waiting for /healthz`);
+      await sleep(1100);
       if (!alive()) return;
       step("install", "ok");
+      await beat();
+      if (!alive()) return;
 
       step("test", "run");
-      say("test listener :8080 → green · running health checks");
+      say("test listener :9082 → green · user traffic stays on blue");
       await stream(10, 0);
+      if (!alive()) return;
+      step("test", "ok");
+      await beat();
+      if (!alive()) return;
+
+      step("smoke", "run");
+      say("smoke hook: GET /healthz, GET / on the test listener");
+      await sleep(1100);
       if (!alive()) return;
 
       if (kind === "unhealthy") {
-        say("health check failed — HTTP 500 on /healthz, 3 consecutive", "crit");
-        step("test", "fail");
+        say(`smoke hook: / reports version "dev", expected "${GREEN_SHA}"`, "crit");
+        step("smoke", "fail");
         ["canary", "bake", "full"].forEach((s) => step(s, "skip"));
-        await sleep(600);
+        await beat();
         if (!alive()) return;
-        say("lifecycle event failed — production traffic never shifted", "warn");
-        setMetrics("n/a", "n/a");
-        step("done", "run");
-        say("terminating green task set, blue untouched");
+        say("CodeDeploy failed the deployment before any user traffic shifted", "warn");
+        setMetrics("0", "OK");
         await stream(14, 0);
         if (!alive()) return;
-        step("done", "ok");
+        say(`blue ${BLUE_SHA} still serving · nothing recorded`);
+        step("done", "skip");
         finish(
           "↺",
-          "Rolled back automatically · 0 requests reached the broken build",
-          "#ff9900",
-          "The gate is AllowTestTraffic: green only ever answers the test listener until it proves healthy, so a build this broken never meets a user."
+          "Stopped at the smoke test · 0 user requests reached the broken build",
+          WARN,
+          "Green only answers the test door until the smoke test passes, so a build that reports the wrong commit never meets a user, and nothing is recorded, so it can't be promoted. The live drill ran in sandbox; every environment stops at this same check."
         );
+        now.textContent = "Done. Users never left the old build, so nobody saw the broken one.";
         setBusy(false);
         return;
       }
 
-      say("health checks passed (5/5)", "ok");
-      step("test", "ok");
+      say(`smoke hook passed: /healthz 200, / reports ${GREEN_SHA}`, "ok");
+      step("smoke", "ok");
+      await beat();
+      if (!alive()) return;
 
       step("canary", "run");
-      say("shifting 10% of production traffic to green");
+      say("shifting 10% of user traffic to green");
+      const canaryAt = clock;
       setSplit(10);
-      await sleep(900);
+      await sleep(1100);
       if (!alive()) return;
       step("canary", "ok");
+      await beat();
+      if (!alive()) return;
 
       step("bake", "run");
-      say("CloudWatch watching ErrorRate and TargetResponseTime");
-      setMetrics("0.00%", "241ms");
+      say("watching zdp-staging-target-5xx (blue + green) for 5 minutes");
+      setMetrics("0", "OK");
 
       if (kind === "degrades") {
-        setMetrics("0.00%", "244ms");
-        await stream(22, 10, 0);
+        // count only the canary window, like the drill's 90 of ~1,000
+        const s0 = nServed;
+        const f0 = nFailed;
+        say("green returns 500 on the requests it gets; blue is fine", "warn");
+        await stream(70, 10, 1);
         if (!alive()) return;
-        setMetrics("0.31%", "1.92s", true);
-        say("green p99 latency climbing — 244ms → 1.92s under real load", "warn");
-        await stream(44, 10, 0.85);
-        if (!alive()) return;
-        setMetrics("4.12%", "2.60s", true);
-        say("ALARM: ErrorRate > 1% for 2 datapoints — rollback triggered", "crit");
+        const winFailed = nFailed - f0;
+        const winTotal = nServed - s0 + winFailed;
+        setMetrics("5+", "ALARM", true);
+        say("ALARM: zdp-staging-target-5xx, 5 or more errors in a minute", "crit", canaryAt + 157);
+        say("CodeDeploy stopped the deployment: ALARM_ACTIVE", "crit", canaryAt + 183);
         step("bake", "fail");
-        ["full"].forEach((s) => step(s, "skip"));
+        step("full", "skip");
         setSplit(0);
-        await sleep(700);
+        await beat();
         if (!alive()) return;
-        step("done", "run");
-        say("traffic returned to blue v1.4.2 · green task set terminated");
+        say(`all traffic back on blue ${BLUE_SHA} · nothing recorded`);
         await stream(16, 0);
         if (!alive()) return;
-        step("done", "ok");
+        step("done", "skip");
         blast.textContent = "blast radius 10%";
-        blast.style.color = "#ff9900";
+        blast.style.color = WARN;
         finish(
           "↺",
-          `Rolled back on the alarm · ${nFailed} of ${nServed + nFailed} requests affected (~${Math.round((nFailed / (nServed + nFailed)) * 100)}%)`,
-          "#ff9900",
-          "This is what the canary is actually for. A build that passes its health checks can still fall over under real traffic — but only the 10% on green ever sees it, and only until the alarm fires. Without the canary that is 100% of requests, until somebody notices."
+          `Rolled back on the alarm · ${winFailed} of ${winTotal} requests during the canary failed (~${Math.round((winFailed / winTotal) * 100)}%)`,
+          WARN,
+          "This is what the canary is for: a build can pass the smoke test and still break under traffic. Only the 10% on green sees it, and only until the alarm fires. In the live drill (Nov 2026, generated traffic at about 5 requests a second) the alarm fired 2m37s into the canary and CodeDeploy rolled back 26 seconds later; 90 of about 1,000 requests failed."
         );
+        now.textContent = "Done. The alarm caught what the smoke test couldn't, and nobody had to step in.";
         setBusy(false);
         return;
       }
 
       await stream(34, 10);
       if (!alive()) return;
-      setMetrics("0.00%", "238ms");
-      say("alarms steady · error rate 0.00% across the bake", "ok");
+      say("5 minutes, 0 errors · alarm stayed OK", "ok", canaryAt + 300);
       step("bake", "ok");
+      await beat();
+      if (!alive()) return;
 
       step("full", "run");
       say("shifting the remaining 90% to green");
       setSplit(100);
-      await sleep(900);
+      await sleep(1100);
       if (!alive()) return;
+      say("deployment succeeded · blue kept 5 more minutes, then shut down", "ok");
       step("full", "ok");
+      await beat();
+      if (!alive()) return;
 
       step("done", "run");
-      say("blue task set draining");
       await stream(18, 100);
       if (!alive()) return;
+      say(`recorded ${GREEN_SHA} as staging's last-good · ready to promote to prod`, "ok");
       step("done", "ok");
-      say("deployment succeeded", "ok");
       finish(
         "✓",
         `Deployed · ${nServed} requests served, 0 failed`,
-        "#2ea043",
-        "No maintenance window, no dropped connections — blue kept serving until green had proved itself twice."
+        GREEN,
+        "No maintenance window and no dropped requests: blue kept serving until green passed the smoke test and five minutes of traffic. In the real pipeline this takes about 13 minutes from merge to recorded."
       );
+      now.textContent = "Done. This build can now be promoted to prod by pull request.";
       setBusy(false);
     }
 
