@@ -1,6 +1,6 @@
 // Copy and facts only for the Zero-Downtime Pipeline demo. No logic here.
 // Step ids, names and "what" lines follow the design spec; the "why" sentences
-// are carried over from the earlier CanaryDemo component.
+// are carried over from the earlier canary demo component.
 import type { StepId } from "../lib/zdp/deploy.ts";
 
 export const STEPS: readonly { id: StepId; name: string; what: string; why: string }[] = [

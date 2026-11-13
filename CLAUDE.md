@@ -20,7 +20,9 @@ Architecture diagram: `docs/architecture.drawio.png` (the PNG embeds the editabl
 src/
   pages/       # Astro routes: index.astro, resume.astro
   components/  # Astro section components + ContactForm React island
-  data/        # content.ts: all site and résumé copy as a structured TS object
+    zdp/       # the Zero-Downtime Pipeline demo (two tabs: deploy, feature flag)
+  data/        # content.ts: all site and résumé copy as a structured TS object; zdp.ts: demo copy
+  lib/zdp/     # pure replay logic for the demo (tests in tests/zdp/)
   layouts/     # BaseLayout.astro
   styles/      # global.css (Tailwind v4 @theme tokens + custom utilities)
 public/
@@ -58,6 +60,7 @@ npm install
 npm run dev          # http://localhost:4321
 npm run build        # static build to dist/
 npm run preview      # preview the built site
+npm test             # unit tests for lib/zdp (tests/zdp/)
 ```
 
 ## Deployment

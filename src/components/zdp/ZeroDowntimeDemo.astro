@@ -4,7 +4,7 @@ import DeployTab from "./DeployTab.astro";
 import FlagTab from "./FlagTab.astro";
 import { SCENARIOS } from "../../lib/zdp/deploy";
 import { FLAG_SCENARIOS } from "../../lib/zdp/flag";
-import { FOOTER_BADGES, PROOFS } from "../../data/zdp";
+import { FOOTER_BADGES, PROOFS, GLOSSARY, PROMOTION, CAVEATS } from "../../data/zdp";
 
 const tabs = [
   {
@@ -28,6 +28,42 @@ const runBtn =
 
 <section id="deploy" class="border-y border-line bg-band px-11 py-[52px] max-[920px]:px-[22px]">
   <SectionPrompt title="The deploy, step by step" path="~/zero-downtime-pipeline" cmd="./deploy.sh --watch" class="mb-3" />
+  <p class="mb-4 max-w-[680px] text-[15px] leading-relaxed text-muted">
+    This is the Zero-Downtime Pipeline project, replayed in your browser. Two demos: a deploy to
+    staging, step by step, with a good build, one that fails the smoke test, one that only breaks
+    under traffic, and a prod rollback; and a feature flag you can flip yourself. Each step
+    explains what it does and why it's there.
+  </p>
+
+  <div class="mb-7 flex max-w-[680px] flex-col gap-2">
+    <details class="group">
+      <summary class="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[13px] text-accent hover:underline [&::-webkit-details-marker]:hidden">
+        <span class="inline-block transition-transform group-open:rotate-90" aria-hidden="true">▸</span>
+        new to this? the terms in plain English
+      </summary>
+      <dl class="m-0 mt-2.5 grid grid-cols-[112px_1fr] gap-x-4 gap-y-2 text-[14px] leading-snug max-[420px]:grid-cols-1 max-[420px]:gap-y-0.5">
+        {GLOSSARY.map(([term, def]) => (
+          <>
+            <dt class="font-mono text-[13px] text-ink max-[420px]:mt-2">{term}</dt>
+            <dd class="m-0 text-muted">{def}</dd>
+          </>
+        ))}
+      </dl>
+    </details>
+    <details class="group">
+      <summary class="inline-flex cursor-pointer list-none items-center gap-2 font-mono text-[13px] text-accent hover:underline [&::-webkit-details-marker]:hidden">
+        <span class="inline-block transition-transform group-open:rotate-90" aria-hidden="true">▸</span>
+        after staging: how a build reaches prod
+      </summary>
+      <ul class="m-0 mt-2.5 grid list-none gap-1.5 p-0 text-[14px] leading-snug text-muted">
+        {PROMOTION.map((p) => (
+          <li class="grid grid-cols-[14px_1fr] gap-1.5">
+            <span class="font-mono text-faint" aria-hidden="true">▸</span><span>{p}</span>
+          </li>
+        ))}
+      </ul>
+    </details>
+  </div>
 
   <div class="overflow-hidden rounded-xl border border-line bg-surface">
     <!-- titlebar -->
@@ -101,7 +137,7 @@ const runBtn =
   </div>
 
   <p class="mt-3.5 max-w-[680px] font-mono text-[11.5px] leading-relaxed text-ghost">
-    Replayed from the real pipeline's 13 Nov 2026 drill, sped up. Commits are illustrative.
+    {CAVEATS.join(" ")}
   </p>
 </section>
 
