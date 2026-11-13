@@ -26,8 +26,8 @@ const TIMELINES: Readonly<Record<FlagScenarioId, readonly FlagTimelineEvent[]>> 
   onoff: [
     FLIPPED,
     LIVE,
-    { key: "flippedoff", at: 120, label: "flipped off", detail: "one setting changed", tone: "go" },
-    { key: "baseline", at: 180, label: "back to baseline", detail: "the old button is back", tone: "ok" },
+    { key: "flippedoff", at: 60, label: "flipped off", detail: "one setting changed", tone: "go" },
+    { key: "baseline", at: 120, label: "back to baseline", detail: "the old button is back", tone: "ok" },
   ],
   misbehave: [
     FLIPPED,

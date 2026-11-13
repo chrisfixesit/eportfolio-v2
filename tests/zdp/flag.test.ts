@@ -100,8 +100,8 @@ test("timeline copy matches the drill and never times 'errors rise'", () => {
 test("onoff timeline and scenario labels", () => {
   const t = new FlagMachine({ landSeconds: 60 }).timeline("onoff");
   assert.deepEqual(t.map((e) => e.key), ["flipped", "live", "flippedoff", "baseline"]);
-  assert.equal(t[2].at, 120);
-  assert.equal(t[3].at, 180);
+  assert.equal(t[2].at, 60);
+  assert.equal(t[3].at, 120);
   assert.equal(t[3].detail, "the old button is back");
   assert.deepEqual(FLAG_SCENARIOS.map((s) => s.label), ["⇆ turn it on, then off", "⚠ turn it on and it misbehaves"]);
 });
