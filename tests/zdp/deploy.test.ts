@@ -80,3 +80,15 @@ test("the three main scenarios promote staging → prod", () => {
     assert.match(sc.prDiff.check, /ran clean in staging/);
   }
 });
+
+test("prod shows what users are on until the run records; staging and sandbox match", () => {
+  for (const id of ["good", "wrong", "breaks", "rollback"] as const) {
+    const sc = SCENARIOS[id];
+    assert.equal(sc.ladder[0]?.sha, sc.blueSha, `${id}: prod at rest`);
+    assert.equal(sc.ladder[1]?.sha, sc.ladder[2]?.sha, `${id}: staging = sandbox`);
+    const ladders = buildDeployScript(id).filter((e) => e.t === "ladder");
+    const last = ladders[ladders.length - 1];
+    const recorded = id === "good" || id === "rollback";
+    assert.equal(last?.sha, recorded ? sc.greenSha : sc.blueSha, `${id}: prod after the run`);
+  }
+});

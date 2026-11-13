@@ -162,7 +162,9 @@ mixed.
   Chris's request on 2026-11-13 after seeing it locally): active rung prod,
   alarm named `zdp-prod-target-5xx`, test/user ports `:9083`/`:8083` in the
   console, PR check `ran clean in staging`; staging and sandbox rungs show
-  the incoming sha as their last-good.
+  the incoming sha as their last-good, and the prod rung keeps showing the
+  sha users are on (`live · …`) until the run records the new one, so the
+  sha only changes on prod, and only when the deploy succeeds.
   The smoke drill actually ran in sandbox; §7's caveat covers that, as it
   does today.
 - Good build ends at about **+12:30** on the clock (about 12.5 minutes

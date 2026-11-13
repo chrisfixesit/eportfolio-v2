@@ -525,7 +525,7 @@ const runBtn =
           case "ladder": {
             const li = q(`[data-rung="${ev.env}"]`);
             if (!li) break;
-            const recorded = ev.note.startsWith("last-good");
+            const recorded = ev.note.includes("last-good");
             li.querySelector("[data-rung-sha]")!.textContent = `${recorded ? "● " : ""}${ev.sha}`;
             li.querySelector("[data-rung-note]")!.textContent = ev.note;
             li.querySelector("[data-rung-digest]")!.textContent = `⌕ ${digestBySha[ev.sha] ?? ""}`;

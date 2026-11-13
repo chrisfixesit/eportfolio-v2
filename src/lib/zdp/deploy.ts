@@ -92,10 +92,12 @@ function buildScenario(s: Spec): DeployScenario {
   const rollback = s.id === "rollback";
   const staging = s.env === "staging";
   // Every scenario promotes staging → prod: the incoming sha already ran
-  // clean in sandbox and staging. In a rollback the "incoming" sha is the
-  // older one, and staging still holds the newer build that is being undone.
+  // clean in sandbox and staging, so those two rungs match. Prod keeps
+  // showing the sha users are on (blue) until the run records the new one.
+  // In a rollback the "incoming" sha is the older one, and staging still
+  // holds the newer build that is being undone.
   const ladder: Rung[] = [
-    rung("prod", s.greenSha, "deploying", true),
+    rung("prod", s.blueSha, rollback ? "live · deployed 41 min ago" : "live · last-good · 2 days ago", true),
     rung("staging", rollback ? s.blueSha : s.greenSha, "last-good · 41 min ago"),
     rung("sandbox", rollback ? s.blueSha : s.greenSha, SANDBOX_NOTE),
   ];
@@ -145,7 +147,7 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
 
   // the rung that is being deployed to, for revert/record updates
   const active = sc.ladder.find((r) => r.active);
-  const prevNote = (): string => "nothing recorded";
+  const prevNote = (): string => "live · nothing recorded";
 
   e.push({
     t: "say",
@@ -158,6 +160,7 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
 
   // 1 install
   e.push({ t: "step", id: "install", state: "run" }, now("install"));
+  e.push({ t: "ladder", env, sha: blueSha, note: `live · deploying ${greenSha} beside it` });
   e.push({ t: "say", text: `starting green ${greenSha} on ECS Fargate · waiting for /healthz` });
   e.push({ t: "sleep", drillSeconds: 12 });
   e.push({ t: "step", id: "install", state: "ok" }, { t: "beat" });
@@ -269,7 +272,7 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
     at: 750,
   });
   e.push({ t: "step", id: "record", state: "ok" });
-  e.push({ t: "ladder", env: active?.env ?? env, sha: greenSha, note: "last-good · just now" });
+  e.push({ t: "ladder", env: active?.env ?? env, sha: greenSha, note: "live · last-good · just now" });
   e.push({
     t: "finish",
     glyph: "✓",
