@@ -131,7 +131,7 @@ has to be awake for that.**
   `OIDC · no stored AWS keys`, `AWS infra in OpenTofu` (the GitHub side is
   scripted, not Tofu, so never "all infra"), and on the right
   `9 of 9 proofs passed live · Nov 2026`. The flag tab swaps the first
-  badge for `AWS AppConfig` and adds `same alarm as the deploy`.
+  badge for `AWS AppConfig` and adds `same alarm as the deploy`. On the flag tab the clock counts from the flip and the origin label reads `since the flip`.
 
 ## 5. Tab 1: Deploy a release
 
@@ -147,7 +147,7 @@ The first three are the current demo's scenarios. The fourth is new and
 exists to make point 6 (rollback is a normal release) visible rather than
 read. In it the ladder's active rung is **prod**, the PR diff shows the sha
 and digest going *backwards*, the check line reads `already ran in prod`,
-and the clock ends at about +13:18.
+and the clock ends at about +12:30 (13m18s from merge is quoted as text).
 
 **Clock origin.** The title-bar clock counts from the start of the
 CodeDeploy deployment (my call). The drill's "2m37s" is measured from the

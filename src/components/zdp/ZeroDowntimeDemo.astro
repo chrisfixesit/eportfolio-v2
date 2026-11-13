@@ -238,6 +238,7 @@ const runBtn =
     const activateTab = (id: TabId) => {
       activeTab = id;
       doReset();
+      q("[data-clock-origin]")!.textContent = id === "flag" ? "since the flip" : "since deploy start";
       setBusy(false);
       tabs.forEach((t) => {
         const on = t.dataset.tab === id;
@@ -267,6 +268,7 @@ const runBtn =
         if (to < 0) return;
         e.preventDefault();
         tabs[to].focus();
+        if ((tabs[to].dataset.tab as TabId) === activeTab) return;
         activateTab(tabs[to].dataset.tab as TabId);
       });
     });
@@ -289,7 +291,7 @@ const runBtn =
     const GREEN = "#2ea043";
     const CRIT = "#f85149";
     const WARN = "#ff9900";
-    const FAINT = "#76838f";
+    const FAINT = "var(--color-faint)";
 
     const dSplit = q("[data-split]")!;
     const segBlue = q('[data-seg="blue"]')!;
@@ -429,10 +431,10 @@ const runBtn =
       outcomeEl.textContent = "";
       const head = document.createElement("div");
       head.style.color = color;
-      head.textContent = `${glyph} ${text.replace("{served}", String(nServed)).replace("{failed}", String(nFailed))}`;
+      head.textContent = `${glyph} ${text.replaceAll("{served}", String(nServed)).replaceAll("{failed}", String(nFailed)).replaceAll("{total}", String(nServed + nFailed))}`;
       const sub = document.createElement("div");
       sub.className = "mt-1 text-[12px] leading-snug";
-      sub.style.color = "#8b97a3";
+      sub.style.color = "var(--color-muted-2)";
       sub.textContent = note;
       outcomeEl.append(head, sub);
     };

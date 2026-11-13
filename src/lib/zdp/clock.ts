@@ -17,7 +17,7 @@ export function toWallMs(
   return opts.reduce ? 0 : Math.round((drillSeconds * 1000) / opts.speed);
 }
 
-/** Deterministic LCG (same constants as the current demo) returning values in [0, 1]. */
+/** Deterministic LCG (a small LCG so replays are deterministic) returning values in [0, 1]. */
 export function makeRng(seed: number): () => number {
   let state = seed;
   return () => {

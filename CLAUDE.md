@@ -10,7 +10,7 @@ Personal portfolio site at https://christophercorbin.cloud. Single-page (with a 
 - **Backend:** AWS Amplify Gen 2 in `amplify/` (CDK): TypeScript Lambda behind a Function URL, DynamoDB, SES
 - **Hosting:** AWS Amplify Hosting in account `590716168923`; security and cache headers in `customHttp.yml`
 - **DNS:** Amazon Route 53 hosted zone, managed with OpenTofu in `chrisfixesit/tofu-or-not-tofu` (`accounts/management/dns`), not in this repo
-- **CI:** GitHub Actions `verify` job on PRs and main (`astro check` + build), plus CodeRabbit review (`.coderabbit.yaml`). Amplify handles deploys.
+- **CI:** GitHub Actions `verify` job on PRs and main (`astro check` + unit tests + build), plus CodeRabbit review (`.coderabbit.yaml`). Amplify handles deploys.
 
 Architecture diagram: `docs/architecture.drawio.png` (the PNG embeds the editable draw.io diagram). Update it when the architecture changes.
 
@@ -29,6 +29,7 @@ public/
   images/      # incl. badges/ (local Credly badge images)
 amplify/       # Amplify Gen 2 backend: contact-form function, table, Function URL
 scripts/       # build helpers: write-contact-env.mjs, generate-og-image.mjs
+tests/zdp/     # unit tests for the zero-downtime demo logic (npm test)
 docs/
   architecture.drawio.png
   superpowers/

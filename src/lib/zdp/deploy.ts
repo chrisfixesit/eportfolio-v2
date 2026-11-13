@@ -48,7 +48,7 @@ export type DeployEvent =
   | { t: "sleep"; drillSeconds: number }
   | { t: "now"; title: string; why: string; fact?: string }
   /**
-   * `text` may contain the tokens `{served}` and `{failed}`; the player
+   * `text` may contain the tokens `{served}`, `{failed}` and `{total}` (served + failed); the player
    * substitutes them with its live request counters when it shows the outcome.
    */
   | { t: "finish"; glyph: string; text: string; tone: "ok" | "warn"; note: string }
@@ -197,7 +197,7 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
       tone: "warn",
       note: "Green only answers the test door until the smoke test passes, so a build that reports the wrong commit never meets a user, and nothing is recorded, so it can't be promoted. The live drill ran in sandbox; every environment stops at this same check.",
     });
-    e.push({ t: "now", title: "Done", why: "Users never left the old build, so nobody saw the broken one." });
+    e.push({ t: "now", title: "Done", why: "Users never left the old build, so nobody saw the broken one.", fact: "drill: failed 4 min after merge · / reported version \"dev\" · 0 users affected" });
     return e;
   }
 
@@ -233,11 +233,11 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
     e.push({
       t: "finish",
       glyph: "↺",
-      text: "Rolled back on the alarm · {failed} of {served} requests failed, all on the 10% canary share",
+      text: "Rolled back on the alarm · {failed} of {total} requests failed, all on the 10% canary share",
       tone: "warn",
       note: "This is what the canary is for: a build can pass the smoke test and still break under traffic. Only the 10% on green sees it, and only until the alarm fires. In the live drill (Nov 2026, generated traffic at about 5 requests a second) the alarm fired 2m37s into the canary and CodeDeploy rolled back 26 seconds later; 90 of about 1,000 requests failed.",
     });
-    e.push({ t: "now", title: "Done", why: "The alarm caught what the smoke test couldn't, and nobody had to step in." });
+    e.push({ t: "now", title: "Done", why: "The alarm caught what the smoke test couldn't, and nobody had to step in.", fact: "drill: alarm 2m37s after traffic started · rolled back 26 s later · 90 of ~1,000 requests failed" });
     return e;
   }
 
@@ -290,6 +290,7 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
     why: rollback
       ? "Prod is back on the previous build, recorded as last-good."
       : "This build can now be promoted to prod by pull request.",
+    fact: rollback ? "drill: 13m18s from merge to recorded" : "drill: about 13 min from merge to recorded",
   });
   return e;
 }

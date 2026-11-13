@@ -70,5 +70,5 @@ export const PROOFS = "9 of 9 proofs passed live · Nov 2026";
 
 export const FOOTER_BADGES: { deploy: string[]; flag: string[] } = {
   deploy: ["drift check · green in all 3 envs", "OIDC · no stored AWS keys", "AWS infra in OpenTofu"],
-  flag: ["AWS AppConfig", "same alarm as the deploy"],
+  flag: ["AWS AppConfig", "OIDC · no stored AWS keys", "AWS infra in OpenTofu", "same alarm as the deploy"],
 };

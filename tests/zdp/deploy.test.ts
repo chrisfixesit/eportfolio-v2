@@ -61,3 +61,11 @@ test("good build outcome text carries live-count placeholders", () => {
   const fin = buildDeployScript("good").find((e) => e.t === "finish");
   assert.ok(fin?.t === "finish" && fin.text.includes("{served}"));
 });
+
+test("the last now event of every script carries the headline fact", () => {
+  for (const id of ["good", "wrong", "breaks", "rollback"] as const) {
+    const nows = buildDeployScript(id).filter((e) => e.t === "now");
+    const last = nows[nows.length - 1];
+    assert.ok(last?.t === "now" && last.fact, `${id} final now has a fact`);
+  }
+});
