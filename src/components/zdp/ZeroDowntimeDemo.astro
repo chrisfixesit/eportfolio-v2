@@ -107,6 +107,8 @@ const runBtn =
 
 <script>
   import { formatClock, toWallMs, REPLAY_SPEED, makeRng } from "../../lib/zdp/clock";
+  import { FlagMachine, pageState } from "../../lib/zdp/flag";
+  import type { FlagScenarioId } from "../../lib/zdp/flag";
   import { SCENARIOS, buildDeployScript } from "../../lib/zdp/deploy";
   import type { DeployScenarioId, DeployScenario, StepState } from "../../lib/zdp/deploy";
 
@@ -127,7 +129,8 @@ const runBtn =
 
     const clockEl = q("[data-clock]")!;
     const stepToggle = q("[data-stepmode]")!;
-    const nextBtn = () => q("[data-next]");
+    const panelEl = (id: string) => q(`[data-tabpanel="${id}"]`)!;
+    const nextBtn = () => panelEl(activeTab).querySelector("[data-next]") as HTMLElement | null;
 
     const sleep = (drillSeconds: number) =>
       new Promise((r) => setTimeout(r, toWallMs(drillSeconds, { speed: REPLAY_SPEED, reduce })));
@@ -150,11 +153,13 @@ const runBtn =
     };
 
     const showNext = (on: boolean) => {
-      const n = nextBtn();
-      if (!n) return;
-      if (!on && document.activeElement === n) stepToggle.focus();
-      n.hidden = !on;
-      n.setAttribute("aria-disabled", "true");
+      const active = nextBtn();
+      qa("[data-next]").forEach((n) => {
+        const show = on && n === active;
+        if (!show && document.activeElement === n) stepToggle.focus();
+        n.hidden = !show;
+        n.setAttribute("aria-disabled", "true");
+      });
     };
 
     stepToggle.addEventListener("click", () => {
@@ -255,8 +260,10 @@ const runBtn =
     const segGreen = q('[data-seg="green"]')!;
     const pctBlue = q('[data-pct="blue"]')!;
     const pctGreen = q('[data-pct="green"]')!;
-    const cellWrap = q("[data-cells]")!;
-    const cells = qa("[data-cell]");
+    const dp = panelEl("deploy");
+    const dq = (s: string) => dp.querySelector(s) as HTMLElement;
+    const cellWrap = dq("[data-cells]");
+    const cells = Array.from(dp.querySelectorAll("[data-cell]")) as HTMLElement[];
     const servedEl = q('[data-count="served"]')!;
     const failedEl = q('[data-count="failed"]')!;
     const greenEl = q('[data-count="green"]')!;
@@ -267,8 +274,8 @@ const runBtn =
     const nowWhy = q("[data-now-why]")!;
     const nowFact = q("[data-now-fact]")!;
     const NOW_IDLE = nowWhy.textContent?.trim() ?? "";
-    const mErr = q('[data-metric="err"]')!;
-    const mState = q('[data-metric="state"]')!;
+    const mErr = dq('[data-metric="err"]');
+    const mState = dq('[data-metric="state"]');
     const gaugeName = q("[data-gauge-name]")!;
     const legendBlue = q('[data-legend="blue"]')!;
     const legendGreen = q('[data-legend="green"]')!;
@@ -426,7 +433,7 @@ const runBtn =
     };
     resetAll.deploy = resetDeploy;
 
-    q("[data-next]")?.addEventListener("click", () => advance?.());
+    qa("[data-next]").forEach((n) => n.addEventListener("click", () => advance?.()));
 
     async function playDeploy(id: string) {
       doReset();
@@ -495,5 +502,202 @@ const runBtn =
       setBusy(false);
     }
     play.deploy = playDeploy;
+
+    // ---------- flag tab ----------
+    const fp = panelEl("flag");
+    const fq = (s: string) => fp.querySelector(s) as HTMLElement;
+    const fqa = (s: string) => Array.from(fp.querySelectorAll(s)) as HTMLElement[];
+    const sw = fq("[data-switch]");
+    const swState = fq("[data-switch-state]");
+    const envChip = fq("[data-flag-env]");
+    const fStatus = fq("[data-flag-status]");
+    const mini = fq("[data-mini]");
+    const miniErr = fq("[data-mini-err]");
+    const fCells = fqa("[data-cell]");
+    const fCellWrap = fq("[data-cells]");
+    const fErr = fq('[data-metric="err"]');
+    const fState = fq('[data-metric="state"]');
+    const evs = fqa("[data-timeline] [data-ev]");
+    const STATUS_IDLE = fStatus.textContent?.trim() ?? "";
+    const machine = new FlagMachine({ landSeconds: 60 });
+    let fIdx = 0;
+    let fRnd = makeRng(7);
+    let evSet: "onoff" | "misbehave" = "misbehave";
+
+    const fMetrics = (count: string, state: string, breach = false) => {
+      fErr.textContent = count;
+      fState.textContent = state;
+      fErr.style.color = breach ? CRIT : "";
+      fState.style.color = breach ? CRIT : "";
+    };
+    const setSwitch = (checked: boolean, text: string) => {
+      sw.setAttribute("aria-checked", String(checked));
+      swState.textContent = text;
+    };
+    const setPage = () => {
+      mini.dataset.page = pageState(machine.state);
+    };
+    const setEnv = () => {
+      const on = machine.state === "on";
+      envChip.style.color = on ? GREEN : "";
+      envChip.style.borderColor = on ? GREEN : "";
+    };
+    const showSet = (set: "onoff" | "misbehave") => {
+      evSet = set;
+      evs.forEach((li) => (li.hidden = set === "onoff" ? !("onoff" in li.dataset) : !("mis" in li.dataset)));
+    };
+    const clearEvs = () => evs.forEach((li) => (li.dataset.state = "idle"));
+    const lit = (key: string) => {
+      const li = evs.find((e) => e.dataset.ev === key);
+      if (li) li.dataset.state = "lit";
+    };
+    const clearCells = () => {
+      fCells.forEach((c) => {
+        c.style.background = "";
+        c.removeAttribute("title");
+      });
+      fIdx = 0;
+      fCellWrap.setAttribute("aria-label", "No requests yet");
+    };
+    const hideErr = () => {
+      miniErr.hidden = true;
+    };
+
+    const resetFlag = () => {
+      machine.startScenario("onoff");
+      fRnd = makeRng(7);
+      setSwitch(false, "OFF");
+      setPage();
+      setEnv();
+      fStatus.textContent = STATUS_IDLE;
+      hideErr();
+      delete mini.dataset.shake;
+      clearCells();
+      clearEvs();
+      showSet("misbehave");
+      fMetrics("–", "–");
+    };
+    resetAll.flag = resetFlag;
+
+    // Light one timeline event; every event after the first waits for a beat (a "step").
+    const lightEv = async (key: string, alive: () => boolean, first = false) => {
+      if (!first) {
+        await beat();
+        if (!alive()) return false;
+      }
+      lit(key);
+      return true;
+    };
+
+    // The landing sequence shared by clicks and scenarios. Returns false if cancelled.
+    const landFlip = async (alive: () => boolean) => {
+      swState.textContent = "landing…";
+      fStatus.textContent = "landing…";
+      await sleep(60);
+      if (!alive()) return false;
+      machine.land();
+      setClock(machine.clock);
+      setPage();
+      setEnv();
+      const on = machine.state === "on";
+      setSwitch(on, on ? "ON" : "OFF");
+      fStatus.textContent = on ? "live in staging" : "back to baseline";
+      return true;
+    };
+
+    sw.addEventListener("click", async () => {
+      const r = machine.click();
+      if (r === "ignored") return;
+      token++;
+      advance?.();
+      setBusy(false);
+      const me = token;
+      const alive = () => me === token;
+      hideErr();
+      if (fErr.textContent !== "–") fMetrics("0", "OK");
+      const turningOn = machine.state === "landing-on";
+      if (turningOn) {
+        clearEvs();
+        showSet("onoff");
+        clearCells();
+        lit("flipped");
+      } else {
+        if (evSet !== "onoff") {
+          clearEvs();
+          showSet("onoff");
+        }
+        lit("flippedoff");
+      }
+      if (!(await landFlip(alive))) return;
+      lit(turningOn ? "live" : "baseline");
+    });
+
+    async function playFlag(id: string) {
+      if (id !== "onoff" && id !== "misbehave") return;
+      doReset();
+      const me = token;
+      const alive = () => me === token;
+      setBusy(true, id);
+      const scen: FlagScenarioId = id;
+      machine.startScenario(scen);
+      showSet(scen);
+      setClock(0);
+
+      machine.flip();
+      lit("flipped");
+      if (!(await landFlip(alive))) return;
+      if (!(await lightEv("live", alive))) return;
+
+      if (scen === "onoff") {
+        if (!(await lightEv("flippedoff", alive))) return;
+        machine.flip();
+        if (!(await landFlip(alive))) return;
+        if (!(await lightEv("baseline", alive))) return;
+        machine.clock = 180;
+        setBusy(false);
+        return;
+      }
+
+      // misbehave
+      if (!(await lightEv("errors", alive))) return;
+      miniErr.hidden = false;
+      if (!reduce) {
+        mini.dataset.shake = "";
+        setTimeout(() => delete mini.dataset.shake, 500);
+      }
+      fMetrics("5+", "ALARM", true);
+      let failed = 0;
+      for (let i = 0; i < fCells.length; i++) {
+        const c = fCells[fIdx++];
+        const bad = fRnd() < 0.3;
+        if (bad) failed++;
+        c.style.background = bad ? CRIT : GREEN;
+        c.title = bad ? "500 · PDF generation failed" : "200";
+        fCellWrap.setAttribute("aria-label", `${i + 1} requests: ${i + 1 - failed} served, ${failed} failed`);
+        await sleep(0.76);
+        if (!alive()) return;
+      }
+
+      if (!(await lightEv("rolledback", alive))) return;
+      machine.autoOff();
+      setSwitch(false, "off · by itself");
+      fStatus.textContent = "rolling back…";
+      await sleep(3);
+      if (!alive()) return;
+      machine.land();
+      setClock(294);
+      setPage();
+      setEnv();
+      hideErr();
+      fStatus.textContent = "rolled back by itself";
+
+      if (!(await lightEv("normal", alive))) return;
+      setClock(324);
+      machine.clock = 324;
+      fMetrics("0", "OK");
+      setBusy(false);
+    }
+    play.flag = playFlag;
+    resetFlag();
   })();
 </script>
