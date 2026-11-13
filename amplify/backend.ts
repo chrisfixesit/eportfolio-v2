@@ -5,9 +5,11 @@ import { Effect, PolicyStatement } from "aws-cdk-lib/aws-iam";
 import { FunctionUrlAuthType, HttpMethod } from "aws-cdk-lib/aws-lambda";
 import { contactForm } from "./functions/contact-form/resource.js";
 
-// SES sends from the verified Gmail address; 246labs.cloud is not a verified SES identity yet.
-const CONTACT_FROM_EMAIL = "christophercorbin24@gmail.com";
+// SES sends through the 246labs account's verified 246labs.cloud identity, which authorizes this
+// account to send as this one address (tofu-or-not-tofu: accounts/246labs/mail).
+const CONTACT_FROM_EMAIL = "christopher@246labs.cloud";
 const CONTACT_TO_EMAIL = "christopher@246labs.cloud";
+const CONTACT_SOURCE_ARN = "arn:aws:ses:us-east-1:687159379702:identity/246labs.cloud";
 
 const backend = defineBackend({ contactForm });
 
@@ -43,6 +45,10 @@ cfnFunction.addPropertyOverride(
 cfnFunction.addPropertyOverride(
   "Environment.Variables.CONTACT_TO_EMAIL",
   CONTACT_TO_EMAIL
+);
+cfnFunction.addPropertyOverride(
+  "Environment.Variables.CONTACT_SOURCE_ARN",
+  CONTACT_SOURCE_ARN
 );
 
 const functionUrl = lambda.addFunctionUrl({

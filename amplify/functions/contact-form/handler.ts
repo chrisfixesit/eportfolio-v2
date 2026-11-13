@@ -8,6 +8,8 @@ const ses = new SESClient({});
 const TABLE_NAME = process.env.CONTACT_TABLE_NAME;
 const CONTACT_FROM_EMAIL = process.env.CONTACT_FROM_EMAIL;
 const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL;
+// Optional: the ARN of another account's SES identity that authorizes us to send as CONTACT_FROM_EMAIL.
+const CONTACT_SOURCE_ARN = process.env.CONTACT_SOURCE_ARN || undefined;
 
 const MAX_NAME = 100;
 const MAX_EMAIL = 254;
@@ -104,6 +106,7 @@ export const handler = async (event: FunctionUrlEvent) => {
     await ses.send(
       new SendEmailCommand({
         Source: CONTACT_FROM_EMAIL,
+        SourceArn: CONTACT_SOURCE_ARN,
         Destination: { ToAddresses: [CONTACT_TO_EMAIL] },
         ReplyToAddresses: [email],
         Message: {
