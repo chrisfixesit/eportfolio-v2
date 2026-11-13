@@ -52,7 +52,7 @@ export const GLOSSARY: readonly (readonly [string, string])[] = [
 
 export const PROMOTION: readonly string[] = [
   "Each merge builds one container image. That same image, by digest, moves sandbox → staging → prod. Nothing is rebuilt on the way.",
-  "Promoting is a pull request that changes one small file naming the commit and digest. A code owner must approve, and merging it deploys.",
+  "Promoting is a pull request that changes one small file naming the commit and digest. A code-owner review is required, and merging it deploys.",
   "A required check blocks the pull request unless that exact build has a last-good record in the stage before. In a live test, a PR with an edited digest was blocked.",
   "Rolling back is the same kind of pull request, pointing at an earlier build. Prod rolled back in 13 minutes from merge.",
   "An hourly drift check compares what the files ask for with what is actually running, in every environment.",

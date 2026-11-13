@@ -52,7 +52,12 @@ test("copy never makes banned claims", () => {
     FOOTER_BADGES,
     scripts: (["good", "wrong", "breaks", "rollback"] as const).map(buildDeployScript),
   });
-  for (const banned of ["all infra in OpenTofu", "code owner approved", "58 s", "instant"]) {
+  for (const banned of ["all infra in OpenTofu", "code owner approved", "code owner must approve", "58 s", "instant"]) {
     assert.ok(!all.includes(banned), banned);
   }
+});
+
+test("good build outcome text carries live-count placeholders", () => {
+  const fin = buildDeployScript("good").find((e) => e.t === "finish");
+  assert.ok(fin?.t === "finish" && fin.text.includes("{served}"));
 });

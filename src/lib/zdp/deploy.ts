@@ -47,6 +47,10 @@ export type DeployEvent =
   | { t: "beat" }
   | { t: "sleep"; drillSeconds: number }
   | { t: "now"; title: string; why: string; fact?: string }
+  /**
+   * `text` may contain the tokens `{served}` and `{failed}`; the player
+   * substitutes them with its live request counters when it shows the outcome.
+   */
   | { t: "finish"; glyph: string; text: string; tone: "ok" | "warn"; note: string }
   | { t: "ladder"; env: Env; sha: string; note: string }
   | { t: "blast"; text: string };
@@ -229,7 +233,7 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
     e.push({
       t: "finish",
       glyph: "↺",
-      text: "Rolled back on the alarm · only the 10% canary share saw errors",
+      text: "Rolled back on the alarm · {failed} of {served} requests failed, all on the 10% canary share",
       tone: "warn",
       note: "This is what the canary is for: a build can pass the smoke test and still break under traffic. Only the 10% on green sees it, and only until the alarm fires. In the live drill (Nov 2026, generated traffic at about 5 requests a second) the alarm fired 2m37s into the canary and CodeDeploy rolled back 26 seconds later; 90 of about 1,000 requests failed.",
     });
@@ -253,7 +257,10 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
   // 6 record
   e.push(
     { t: "step", id: "record", state: "run" },
-    now("record", "drill: about 13 min from merge to recorded"),
+    now(
+      "record",
+      rollback ? "drill: 13m18s from merge to recorded" : "drill: about 13 min from merge to recorded",
+    ),
   );
   e.push({ t: "stream", n: 18, greenPct: 100 });
   e.push({
@@ -269,7 +276,9 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
   e.push({
     t: "finish",
     glyph: "✓",
-    text: rollback ? "Rolled back · prod is on the previous build, 0 failed" : "Deployed · 0 failed",
+    text: rollback
+      ? "Rolled back · {served} requests served, {failed} failed"
+      : "Deployed · {served} requests served, {failed} failed",
     tone: "ok",
     note: rollback
       ? "A rollback is a normal release: the same six steps, pointed at the previous build. Prod took 13m18s from merge to recorded, about 12.5 minutes of it inside CodeDeploy."
