@@ -333,7 +333,7 @@ export const siteContent = {
     heading: "Let's connect.",
     blurb:
       "Open to cloud, DevOps and platform engineering roles, remote or on-site. Happy to relocate and travel.",
-    email: "christophercorbin24@gmail.com",
+    email: "christopher@246labs.cloud",
     location: "Based in Barbados",
     now: "● now: studying for AWS DevOps Engineer – Professional · building at 246Labs",
     clients: { label: "Have a project? Client work goes through 246Labs", linkLabel: "246labs.cloud →", href: "https://246labs.cloud" },
@@ -347,7 +347,7 @@ export const siteContent = {
     links: [
       { label: "github", href: "https://github.com/chrisfixesit" },
       { label: "linkedin", href: "https://www.linkedin.com/in/christophercorbin" },
-      { label: "email", href: "mailto:christophercorbin24@gmail.com" },
+      { label: "email", href: "mailto:christopher@246labs.cloud" },
       { label: "resume", href: "/resume" },
     ],
   },
@@ -359,7 +359,7 @@ export const resumeContent = {
   tagline: "DevOps & Cloud Engineer · Full-stack development · Infrastructure as Code · AI",
   contactLines: [
     "christophercorbin.cloud",
-    "christophercorbin24@gmail.com",
+    "christopher@246labs.cloud",
     "github.com/chrisfixesit",
     "linkedin.com/in/christophercorbin",
   ],

@@ -15,7 +15,7 @@ interface FormFields {
  */
 const API_URL: string | undefined = import.meta.env.PUBLIC_CONTACT_API_URL;
 
-const FALLBACK_EMAIL = "christophercorbin24@gmail.com";
+const FALLBACK_EMAIL = "christopher@246labs.cloud";
 
 export default function ContactForm() {
   const [state, setState] = useState<FormState>("idle");
