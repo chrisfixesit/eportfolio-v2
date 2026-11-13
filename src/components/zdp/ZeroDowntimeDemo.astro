@@ -653,7 +653,6 @@ const runBtn =
         machine.flip();
         if (!(await landFlip(alive))) return;
         if (!(await lightEv("baseline", alive))) return;
-        machine.clock = 180;
         setBusy(false);
         return;
       }
@@ -685,15 +684,16 @@ const runBtn =
       await sleep(3);
       if (!alive()) return;
       machine.land();
-      setClock(294);
+      machine.clock = 294;
+      setClock(machine.clock);
       setPage();
       setEnv();
       hideErr();
       fStatus.textContent = "rolled back by itself";
 
       if (!(await lightEv("normal", alive))) return;
-      setClock(324);
       machine.clock = 324;
+      setClock(machine.clock);
       fMetrics("0", "OK");
       setBusy(false);
     }

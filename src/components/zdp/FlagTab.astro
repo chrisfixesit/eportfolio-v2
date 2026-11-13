@@ -29,7 +29,7 @@ const toneBorder: Record<string, string> = {
           aria-checked="false"
           aria-label="resume-pdf feature flag"
           data-switch
-          class="group/sw relative h-[42px] w-[84px] shrink-0 rounded-full bg-line-2 transition-[background-color,box-shadow] duration-300 aria-checked:shadow-[0_0_0_6px_rgba(46,160,67,.18)]"
+          class="group/sw relative h-[42px] w-[84px] shrink-0 rounded-full bg-line-2 transition-[background-color,box-shadow] duration-300 aria-checked:bg-[#2ea043] aria-checked:shadow-[0_0_0_6px_rgba(46,160,67,.18)]"
         >
           <span
             data-knob
@@ -128,7 +128,7 @@ const toneBorder: Record<string, string> = {
           toneBorder[e.tone],
         ]}
       >
-        <div class="text-ink">{e.at !== undefined ? `≈ ${formatClock(e.at)} ` : ""}{e.label}</div>
+        <div class="text-ink">{e.at !== undefined ? `${e.at > 0 ? "≈ " : ""}${formatClock(e.at)} ` : ""}{e.label}</div>
         <div class="mt-0.5 text-[11.5px] leading-snug">{e.detail}</div>
         {e.illustrative && <div class="mt-0.5 text-[11px] text-faint">illustrative timing</div>}
       </li>
