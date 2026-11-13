@@ -6,7 +6,8 @@ const ddb = new DynamoDBClient({});
 const ses = new SESClient({});
 
 const TABLE_NAME = process.env.CONTACT_TABLE_NAME;
-const CONTACT_EMAIL = process.env.CONTACT_EMAIL;
+const CONTACT_FROM_EMAIL = process.env.CONTACT_FROM_EMAIL;
+const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL;
 
 const MAX_NAME = 100;
 const MAX_EMAIL = 254;
@@ -62,8 +63,8 @@ export const handler = async (event: FunctionUrlEvent) => {
     return response(405, { error: "Method not allowed" });
   }
 
-  if (!TABLE_NAME || !CONTACT_EMAIL) {
-    console.error("Missing CONTACT_TABLE_NAME or CONTACT_EMAIL env vars");
+  if (!TABLE_NAME || !CONTACT_FROM_EMAIL || !CONTACT_TO_EMAIL) {
+    console.error("Missing CONTACT_TABLE_NAME, CONTACT_FROM_EMAIL or CONTACT_TO_EMAIL env vars");
     return response(500, { error: "Server misconfigured" });
   }
 
@@ -102,8 +103,8 @@ export const handler = async (event: FunctionUrlEvent) => {
   try {
     await ses.send(
       new SendEmailCommand({
-        Source: CONTACT_EMAIL,
-        Destination: { ToAddresses: [CONTACT_EMAIL] },
+        Source: CONTACT_FROM_EMAIL,
+        Destination: { ToAddresses: [CONTACT_TO_EMAIL] },
         ReplyToAddresses: [email],
         Message: {
           Subject: { Data: `Portfolio contact from ${name}` },
