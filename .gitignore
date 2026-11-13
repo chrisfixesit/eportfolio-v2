@@ -55,3 +55,6 @@ amplifyconfiguration*.json
 preview/
 preview-new/
 _to_delete/
+
+# brainstorm mockups
+.superpowers/
