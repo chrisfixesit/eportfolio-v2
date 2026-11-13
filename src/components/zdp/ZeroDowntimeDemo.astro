@@ -1,0 +1,244 @@
+---
+import SectionPrompt from "../SectionPrompt.astro";
+import DeployTab from "./DeployTab.astro";
+import FlagTab from "./FlagTab.astro";
+import { SCENARIOS } from "../../lib/zdp/deploy";
+import { FLAG_SCENARIOS } from "../../lib/zdp/flag";
+import { FOOTER_BADGES, PROOFS } from "../../data/zdp";
+
+const tabs = [
+  {
+    id: "deploy",
+    label: "▶ Deploy a release",
+    sub: "new code reaches users in steps, and backs out on its own if it misbehaves",
+  },
+  {
+    id: "flag",
+    label: "⇆ Flip a feature flag",
+    sub: "turn a feature on or off without deploying anything",
+  },
+];
+const rows = [
+  { id: "deploy", items: Object.values(SCENARIOS) },
+  { id: "flag", items: FLAG_SCENARIOS },
+];
+const runBtn =
+  "rounded-md border border-line-2 px-3.5 py-2 text-left font-mono text-xs leading-snug text-body transition-colors hover:border-accent hover:text-accent aria-pressed:border-accent aria-pressed:text-accent";
+---
+
+<section id="deploy" class="border-y border-line bg-band px-11 py-[52px] max-[920px]:px-[22px]">
+  <SectionPrompt title="The deploy, step by step" path="~/zero-downtime-pipeline" cmd="./deploy.sh --watch" class="mb-3" />
+
+  <div class="overflow-hidden rounded-xl border border-line bg-surface">
+    <!-- titlebar -->
+    <div class="flex flex-wrap items-center gap-2 border-b border-line px-4 py-[11px] font-mono text-xs text-faint">
+      <span class="h-2 w-2 rounded-full bg-accent" aria-hidden="true"></span>
+      zero-downtime-pipeline · replayed from the 13 Nov 2026 drill, sped up
+      <span class="ml-auto"><span data-clock class="text-ink">+0:00</span> <span data-clock-origin>since deploy start</span></span>
+    </div>
+
+    <!-- big tabs -->
+    <div role="tablist" aria-label="Demo" class="grid grid-cols-2 border-b border-line max-[600px]:grid-cols-1">
+      {tabs.map((t, i) => (
+        <button
+          type="button"
+          role="tab"
+          id={`zdp-tab-${t.id}`}
+          data-tab={t.id}
+          aria-selected={i === 0 ? "true" : "false"}
+          aria-controls={`zdp-panel-${t.id}`}
+          tabindex={i === 0 ? 0 : -1}
+          class:list={[
+            "border-b-2 px-4 py-3.5 text-left transition-colors",
+            i === 0 ? "border-accent bg-page text-ink" : "border-transparent bg-band text-faint",
+          ]}
+        >
+          <span class="block font-mono text-[13px]">{t.label}</span>
+          <span class="mt-1 block text-[12.5px] leading-snug">{t.sub}</span>
+        </button>
+      ))}
+    </div>
+
+    <!-- scenarios -->
+    <div class="flex flex-wrap items-center gap-2.5 border-b border-line px-4 py-3.5" data-controls>
+      {rows.map((r) => (
+        <div class="flex flex-wrap items-center gap-2.5" data-scenarios={r.id} hidden={r.id !== "deploy"}>
+          {r.items.map((s) => (
+            <button type="button" data-run={s.id} title={s.hint} aria-pressed="false" class={runBtn}>{s.label}</button>
+          ))}
+        </div>
+      ))}
+      <button
+        type="button"
+        data-stepmode
+        aria-pressed="false"
+        title="pause after each step until you press next"
+        class="ml-auto rounded-md border border-line px-3 py-2 font-mono text-xs text-faint transition-colors hover:border-line-2 hover:text-body aria-pressed:border-accent aria-pressed:text-accent"
+      ><span aria-hidden="true">⏸</span> step through</button>
+      <button
+        type="button"
+        data-run="reset"
+        class="rounded-md border border-line px-3 py-2 font-mono text-xs text-faint transition-colors hover:border-line-2 hover:text-body"
+      >↺ reset</button>
+    </div>
+
+    <DeployTab />
+    <FlagTab />
+
+    <!-- footer -->
+    {(["deploy", "flag"] as const).map((id) => (
+      <div
+        data-footer={id}
+        hidden={id !== "deploy"}
+        class="flex flex-wrap items-center gap-2 border-t border-line px-4 py-3 font-mono text-[10.5px] text-faint"
+      >
+        {FOOTER_BADGES[id].map((b) => (
+          <span class="rounded border border-line px-1.5 py-0.5 text-faint font-mono text-[10.5px]">{b}</span>
+        ))}
+        <span class="ml-auto">{PROOFS}</span>
+      </div>
+    ))}
+  </div>
+
+  <p class="mt-3.5 max-w-[680px] font-mono text-[11.5px] leading-relaxed text-ghost">
+    Replayed from the real pipeline's 13 Nov 2026 drill, sped up. Commits are illustrative.
+  </p>
+</section>
+
+<script>
+  import { formatClock, toWallMs, REPLAY_SPEED } from "../../lib/zdp/clock";
+
+  (() => {
+    const root = document.getElementById("deploy");
+    if (!root) return;
+    const q = (s: string) => root.querySelector(s) as HTMLElement | null;
+    const qa = (s: string) => Array.from(root.querySelectorAll(s)) as HTMLElement[];
+
+    type TabId = "deploy" | "flag";
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let token = 0;
+    let busy = false;
+    let stepMode = false;
+    let activeTab: TabId = "deploy";
+    let advance: (() => void) | null = null;
+
+    const clockEl = q("[data-clock]")!;
+    const stepToggle = q("[data-stepmode]")!;
+    const nextBtn = () => q("[data-next]");
+
+    const sleep = (drillSeconds: number) =>
+      new Promise((r) => setTimeout(r, toWallMs(drillSeconds, { speed: REPLAY_SPEED, reduce })));
+
+    const PAUSE_MS = 2400;
+    const beat = (): Promise<unknown> => {
+      if (!stepMode) return new Promise((r) => setTimeout(r, reduce ? 0 : PAUSE_MS));
+      nextBtn()?.setAttribute("aria-disabled", "false");
+      return new Promise<void>((r) => {
+        advance = () => {
+          advance = null;
+          nextBtn()?.setAttribute("aria-disabled", "true");
+          r();
+        };
+      });
+    };
+
+    const setClock = (seconds: number) => {
+      clockEl.textContent = formatClock(seconds);
+    };
+
+    const showNext = (on: boolean) => {
+      const n = nextBtn();
+      if (!n) return;
+      if (!on && document.activeElement === n) stepToggle.focus();
+      n.hidden = !on;
+      n.setAttribute("aria-disabled", "true");
+    };
+
+    stepToggle.addEventListener("click", () => {
+      stepMode = !stepMode;
+      stepToggle.setAttribute("aria-pressed", String(stepMode));
+      if (busy) showNext(stepMode);
+      if (!stepMode) advance?.();
+    });
+
+    // Buttons are never disabled: that would throw keyboard focus back to <body>.
+    const setBusy = (on: boolean, kind?: string) => {
+      busy = on;
+      qa("[data-run]").forEach((b) => {
+        if (b.dataset.run === "reset") return;
+        b.setAttribute("aria-pressed", String(on && b.dataset.run === kind));
+      });
+      root.setAttribute("aria-busy", String(on));
+      showNext(on && stepMode);
+    };
+
+    // Filled in by the deploy and flag tab tasks.
+    const resetAll = {
+      deploy: (): void => {},
+      flag: (): void => {},
+    };
+    const play: Partial<Record<TabId, (kind: string) => void>> = {};
+
+    const doReset = () => {
+      token++;
+      advance?.();
+      setClock(0);
+      resetAll.deploy();
+      resetAll.flag();
+    };
+
+    const tabs = qa('[role="tablist"] > [role="tab"]');
+    const ACTIVE = ["text-ink", "border-accent", "bg-page"];
+    const INACTIVE = ["text-faint", "border-transparent", "bg-band"];
+
+    const activateTab = (id: TabId) => {
+      activeTab = id;
+      doReset();
+      setBusy(false);
+      tabs.forEach((t) => {
+        const on = t.dataset.tab === id;
+        t.setAttribute("aria-selected", String(on));
+        t.tabIndex = on ? 0 : -1;
+        t.classList.remove(...(on ? INACTIVE : ACTIVE));
+        t.classList.add(...(on ? ACTIVE : INACTIVE));
+      });
+      qa("[data-tabpanel]").forEach((p) => (p.hidden = p.dataset.tabpanel !== id));
+      qa("[data-scenarios]").forEach((p) => (p.hidden = p.dataset.scenarios !== id));
+      qa("[data-footer]").forEach((p) => (p.hidden = p.dataset.footer !== id));
+    };
+
+    tabs.forEach((t, i) => {
+      t.addEventListener("click", () => activateTab(t.dataset.tab as TabId));
+      t.addEventListener("keydown", (e) => {
+        const k = (e as KeyboardEvent).key;
+        let to = -1;
+        if (k === "ArrowRight") to = (i + 1) % tabs.length;
+        else if (k === "ArrowLeft") to = (i - 1 + tabs.length) % tabs.length;
+        else if (k === "Home") to = 0;
+        else if (k === "End") to = tabs.length - 1;
+        if (to < 0) return;
+        e.preventDefault();
+        tabs[to].focus();
+        activateTab(tabs[to].dataset.tab as TabId);
+      });
+    });
+
+    qa("[data-run]").forEach((btn) =>
+      btn.addEventListener("click", () => {
+        const kind = btn.dataset.run!;
+        if (kind === "reset") {
+          doReset();
+          setBusy(false);
+        } else {
+          play[activeTab]?.(kind);
+        }
+      })
+    );
+
+    // Referenced so the skeleton type-checks until the tab tasks use them.
+    void token;
+    void sleep;
+    void beat;
+  })();
+</script>
