@@ -158,8 +158,11 @@ the wording "2m37s after traffic started". The two numbers must not be
 mixed.
 
 ### Environments and per-scenario data (my calls)
-- Scenarios 1 to 3 deploy to **staging**: active rung staging, alarm named
-  `zdp-staging-target-5xx`, test/user ports `:9082`/`:8082` in the console.
+- Scenarios 1 to 3 promote **staging → prod** (changed from staging at
+  Chris's request on 2026-11-13 after seeing it locally): active rung prod,
+  alarm named `zdp-prod-target-5xx`, test/user ports `:9083`/`:8083` in the
+  console, PR check `ran clean in staging`; staging and sandbox rungs show
+  the incoming sha as their last-good.
   The smoke drill actually ran in sandbox; §7's caveat covers that, as it
   does today.
 - Good build ends at about **+12:30** on the clock (about 12.5 minutes
@@ -213,7 +216,7 @@ Top to bottom, inside the frame:
    environment name, short sha, a small "last-good · N ago" line, and the
    first 12 hex characters of the image digest with a fingerprint glyph.
    Between rungs a small ▲ with a note (`PR #42 merged`,
-   `next: PR, after staging records`; no clock value on the merge note,
+   `PR #42 merged · promotes staging → prod`; no clock value on the merge note,
    since the clock starts at deployment start). The active rung has an orange
    border and a ◐ marker. Under the ladder, a small box showing **the
    promotion PR as a two-line diff** (`- sha … digest …` / `+ sha …

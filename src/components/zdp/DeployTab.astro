@@ -5,8 +5,8 @@ import { SCENARIOS } from "../../lib/zdp/deploy";
 const CELLS = 120;
 const sc = SCENARIOS.good;
 const prNotes: Record<string, string> = {
-  "sandbox>staging": "PR #42 merged",
-  "staging>prod": "next: PR, after staging records",
+  "sandbox>staging": "promoted by PR after sandbox ran clean",
+  "staging>prod": "PR #42 merged · promotes staging → prod",
 };
 const order = sc.ladder.map((r) => r.env);
 const upNote = (i: number) => prNotes[`${order[i + 1]}>${order[i]}`] ?? "";

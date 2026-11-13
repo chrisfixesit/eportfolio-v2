@@ -74,9 +74,9 @@ interface Spec {
 }
 
 const SPECS: Spec[] = [
-  { id: "good", label: "▶ a good build", hint: "the happy path", env: "staging", blueSha: OLD_SHA, greenSha: NEW_SHA },
-  { id: "wrong", label: "✕ one that starts wrong", hint: "caught by the smoke test", env: "staging", blueSha: OLD_SHA, greenSha: NEW_SHA },
-  { id: "breaks", label: "⚠ one that breaks under traffic", hint: "caught by the alarm", env: "staging", blueSha: OLD_SHA, greenSha: NEW_SHA },
+  { id: "good", label: "▶ a good build", hint: "the happy path", env: "prod", blueSha: OLD_SHA, greenSha: NEW_SHA },
+  { id: "wrong", label: "✕ one that starts wrong", hint: "caught by the smoke test", env: "prod", blueSha: OLD_SHA, greenSha: NEW_SHA },
+  { id: "breaks", label: "⚠ one that breaks under traffic", hint: "caught by the alarm", env: "prod", blueSha: OLD_SHA, greenSha: NEW_SHA },
   { id: "rollback", label: "↩ roll prod back", hint: "the same six steps, pointed at the previous build", env: "prod", blueSha: NEW_SHA, greenSha: OLD_SHA },
 ];
 
@@ -91,17 +91,14 @@ const rung = (env: Env, sha: string, note: string, active = false): Rung => ({
 function buildScenario(s: Spec): DeployScenario {
   const rollback = s.id === "rollback";
   const staging = s.env === "staging";
-  const ladder: Rung[] = rollback
-    ? [
-        rung("prod", s.greenSha, "deploying", true),
-        rung("staging", s.blueSha, "last-good · 41 min ago"),
-        rung("sandbox", s.blueSha, SANDBOX_NOTE),
-      ]
-    : [
-        rung("prod", s.blueSha, "last-good · 2 days ago"),
-        rung("staging", s.greenSha, "deploying", true),
-        rung("sandbox", s.greenSha, SANDBOX_NOTE),
-      ];
+  // Every scenario promotes staging → prod: the incoming sha already ran
+  // clean in sandbox and staging. In a rollback the "incoming" sha is the
+  // older one, and staging still holds the newer build that is being undone.
+  const ladder: Rung[] = [
+    rung("prod", s.greenSha, "deploying", true),
+    rung("staging", rollback ? s.blueSha : s.greenSha, "last-good · 41 min ago"),
+    rung("sandbox", rollback ? s.blueSha : s.greenSha, SANDBOX_NOTE),
+  ];
   return {
     id: s.id,
     label: s.label,
@@ -116,9 +113,9 @@ function buildScenario(s: Spec): DeployScenario {
     prDiff: {
       minus: `- sha ${s.blueSha} digest sha256:${DIGEST12[s.blueSha]}…`,
       plus: `+ sha ${s.greenSha} digest sha256:${DIGEST12[s.greenSha]}…`,
-      check: staging
-        ? "✓ check: ran clean in sandbox · code-owner review required"
-        : "✓ check: already ran in prod · code-owner review required",
+      check: rollback
+        ? "✓ check: already ran in prod · code-owner review required"
+        : "✓ check: ran clean in staging · code-owner review required",
     },
   };
 }
@@ -267,7 +264,7 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
     t: "say",
     text: rollback
       ? `recorded ${greenSha} as prod's last-good`
-      : `recorded ${greenSha} as staging's last-good · ready to promote to prod`,
+      : `recorded ${greenSha} as prod's last-good · live for everyone`,
     tone: "ok",
     at: 750,
   });
@@ -289,7 +286,7 @@ export function buildDeployScript(id: DeployScenarioId): DeployEvent[] {
     title: "Done",
     why: rollback
       ? "Prod is back on the previous build, recorded as last-good."
-      : "This build can now be promoted to prod by pull request.",
+      : "This build is now prod's last-good, so a rollback or the next release can point at it.",
     fact: rollback ? "drill: 13m18s from merge to recorded" : "drill: about 13 min from merge to recorded",
   });
   return e;

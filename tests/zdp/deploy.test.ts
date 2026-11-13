@@ -69,3 +69,14 @@ test("the last now event of every script carries the headline fact", () => {
     assert.ok(last?.t === "now" && last.fact, `${id} final now has a fact`);
   }
 });
+
+test("the three main scenarios promote staging → prod", () => {
+  for (const id of ["good", "wrong", "breaks"] as const) {
+    const sc = SCENARIOS[id];
+    assert.equal(sc.env, "prod");
+    assert.equal(sc.alarmName, "zdp-prod-target-5xx");
+    assert.equal(sc.ladder[0]?.env, "prod");
+    assert.equal(sc.ladder[0]?.active, true);
+    assert.match(sc.prDiff.check, /ran clean in staging/);
+  }
+});
