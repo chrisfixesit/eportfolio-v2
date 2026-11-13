@@ -189,7 +189,7 @@ Top to bottom, inside the frame:
    (Ports differ per environment: staging `:9082`/`:8082`, prod
    `:9083`/`:8083`. The console log may print the real port for the
    active rung; the chip must not hard-code one.)
-   | 3 | Smoke test | must report the exact commit |
+   | 3 | Smoke test | the app is tested: it must pass the health check and report the exact commit |
    | 4 | 10% canary | 1 in 10 users, watched 5 min |
    | 5 | 100% | everyone moves, old build kept 5 min |
    | 6 | Record last-good | only a recorded build can promote |

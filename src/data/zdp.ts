@@ -19,8 +19,8 @@ export const STEPS: readonly { id: StepId; name: string; what: string; why: stri
   {
     id: "smoke",
     name: "Smoke test",
-    what: "must report the exact commit",
-    why: "It catches a build that starts but is wrong. In a live drill it caught one reporting version \"dev\", and no user ever reached it.",
+    what: "the app is tested: it must pass the health check and report the exact commit",
+    why: "It tests the running app before anyone uses it, and catches a build that starts but is wrong. In a live drill it caught one reporting version \"dev\", and no user ever reached it.",
   },
   {
     id: "canary",
