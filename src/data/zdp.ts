@@ -68,6 +68,10 @@ export const CAVEATS: string[] = [
 
 export const PROOFS = "9 of 9 proofs passed live · Nov 2026";
 
+/** Deploy-tab alarm gauge, shown after the alarm name. */
+export const ALARM_GAUGE_TEXT =
+  "cloudwatch 5xx alarm · armed for the whole deploy · rolls back at 5 or more errors in a minute";
+
 export const FOOTER_BADGES: { deploy: string[]; flag: string[] } = {
   deploy: ["drift check · green in all 3 envs", "OIDC · no stored AWS keys", "AWS infra in OpenTofu"],
   flag: ["AWS AppConfig", "OIDC · no stored AWS keys", "AWS infra in OpenTofu", "same alarm as the deploy"],

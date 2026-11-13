@@ -437,7 +437,7 @@ export const resumeContent = {
     },
     {
       title: "Zero-Downtime Delivery Pipeline",
-      url: "https://github.com/chrisfixesit/zero-downtime-pipeline",
+      url: "github.com/chrisfixesit/zero-downtime-pipeline",
       description:
         "Blue/green ECS Fargate deploys promoted by digest through PRs, with a smoke gate, 10% canary and alarm-triggered rollback, proved in live drills. OIDC roles, AWS infrastructure in OpenTofu.",
     },

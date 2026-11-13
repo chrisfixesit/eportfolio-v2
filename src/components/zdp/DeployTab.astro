@@ -1,15 +1,10 @@
 ---
-import { STEPS } from "../../data/zdp";
+import { ALARM_GAUGE_TEXT, STEPS } from "../../data/zdp";
 import { SCENARIOS } from "../../lib/zdp/deploy";
 
 const CELLS = 120;
 const sc = SCENARIOS.good;
-const prNotes: Record<string, string> = {
-  "sandbox>staging": "promoted by PR after sandbox ran clean",
-  "staging>prod": "PR #42 merged · promotes staging → prod",
-};
-const order = sc.ladder.map((r) => r.env);
-const upNote = (i: number) => prNotes[`${order[i + 1]}>${order[i]}`] ?? "";
+const upNote = (i: number) => sc.upNotes[i] ?? "";
 ---
 
 <div role="tabpanel" data-tabpanel="deploy" id="zdp-panel-deploy" aria-labelledby="zdp-tab-deploy" tabindex="0">
@@ -38,7 +33,7 @@ const upNote = (i: number) => prNotes[`${order[i + 1]}>${order[i]}`] ?? "";
   <div data-gauge class="mx-4 mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-md border border-line px-3 py-2 font-mono text-[11.5px]">
     <span class="text-muted-2">
       <span data-gauge-name class="text-ink">{sc.alarmName}</span>
-      cloudwatch 5xx alarm · armed for the whole deploy · rolls back at 5 or more errors in a minute
+      {ALARM_GAUGE_TEXT}
     </span>
     <span class="tabular-nums text-ink">
       <span data-metric="err">–</span> / min · <span data-metric="state">–</span>

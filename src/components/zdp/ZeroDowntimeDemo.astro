@@ -368,6 +368,9 @@ const runBtn =
       prMinus.textContent = sc.prDiff.minus;
       prPlus.textContent = sc.prDiff.plus;
       prCheck.textContent = sc.prDiff.check;
+      document.querySelectorAll<HTMLElement>("#deploy [data-up-note]").forEach((el, i) => {
+        el.textContent = `▲ ${sc.upNotes[i] ?? ""}`;
+      });
       setSplit(0);
     };
 

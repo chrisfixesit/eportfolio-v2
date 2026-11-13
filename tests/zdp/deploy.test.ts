@@ -92,3 +92,9 @@ test("prod shows what users are on until the run records; staging and sandbox ma
     assert.equal(last?.sha, recorded ? sc.greenSha : sc.blueSha, `${id}: prod after the run`);
   }
 });
+
+test("ladder notes between rungs are scenario-specific", () => {
+  assert.match(SCENARIOS.good.upNotes[0] ?? "", /promotes staging → prod/);
+  assert.match(SCENARIOS.rollback.upNotes[0] ?? "", /rollback PR merged/);
+  assert.equal(SCENARIOS.good.upNotes.length, SCENARIOS.good.ladder.length - 1);
+});

@@ -27,6 +27,8 @@ export interface DeployScenario {
   testPort: number;
   userPort: number;
   ladder: Rung[];
+  /** notes shown between ladder rungs, top to bottom: [prod↔staging, staging↔sandbox] */
+  upNotes: string[];
   prDiff: { minus: string; plus: string; check: string };
 }
 
@@ -112,6 +114,10 @@ function buildScenario(s: Spec): DeployScenario {
     testPort: staging ? 9082 : 9083,
     userPort: staging ? 8082 : 8083,
     ladder,
+    upNotes: [
+      rollback ? "rollback PR merged · points prod at the previous build" : "PR #42 merged · promotes staging → prod",
+      "promoted by PR after sandbox ran clean",
+    ],
     prDiff: {
       minus: `- sha ${s.blueSha} digest sha256:${DIGEST12[s.blueSha]}…`,
       plus: `+ sha ${s.greenSha} digest sha256:${DIGEST12[s.greenSha]}…`,

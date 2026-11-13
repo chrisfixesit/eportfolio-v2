@@ -3,7 +3,9 @@ import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 const ddb = new DynamoDBClient({});
-const ses = new SESClient({});
+// The sending identity lives in one Region; send from there even if this function moves.
+const SOURCE_REGION = process.env.CONTACT_SOURCE_ARN?.split(":")[3];
+const ses = new SESClient(SOURCE_REGION ? { region: SOURCE_REGION } : {});
 
 const TABLE_NAME = process.env.CONTACT_TABLE_NAME;
 const CONTACT_FROM_EMAIL = process.env.CONTACT_FROM_EMAIL;
