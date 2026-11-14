@@ -1,13 +1,16 @@
 import { randomUUID } from "node:crypto";
-import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { DynamoDBClient, PutItemCommand, UpdateItemCommand } from "@aws-sdk/client-dynamodb";
 import { SESClient, SendEmailCommand } from "@aws-sdk/client-ses";
 
 const ddb = new DynamoDBClient({});
-const ses = new SESClient({});
+// Same region as the SES identity in CONTACT_SOURCE_ARN; delegated sends must use that region.
+const ses = new SESClient({ region: "us-east-1" });
 
 const TABLE_NAME = process.env.CONTACT_TABLE_NAME;
 const CONTACT_FROM_EMAIL = process.env.CONTACT_FROM_EMAIL;
 const CONTACT_TO_EMAIL = process.env.CONTACT_TO_EMAIL;
+// Optional: the ARN of another account's SES identity that authorizes us to send as CONTACT_FROM_EMAIL.
+const CONTACT_SOURCE_ARN = process.env.CONTACT_SOURCE_ARN || undefined;
 
 const MAX_NAME = 100;
 const MAX_EMAIL = 254;
@@ -104,6 +107,7 @@ export const handler = async (event: FunctionUrlEvent) => {
     await ses.send(
       new SendEmailCommand({
         Source: CONTACT_FROM_EMAIL,
+        SourceArn: CONTACT_SOURCE_ARN,
         Destination: { ToAddresses: [CONTACT_TO_EMAIL] },
         ReplyToAddresses: [email],
         Message: {
@@ -117,8 +121,20 @@ export const handler = async (event: FunctionUrlEvent) => {
       })
     );
   } catch (err) {
-    // Message is already persisted in DynamoDB; log and still succeed.
+    // Message is already persisted in DynamoDB; flag it as not emailed so it can be found and resent.
     console.error("SES send failed (message stored in DynamoDB)", err);
+    try {
+      await ddb.send(
+        new UpdateItemCommand({
+          TableName: TABLE_NAME,
+          Key: { id: { S: id } },
+          UpdateExpression: "SET emailFailed = :t",
+          ExpressionAttributeValues: { ":t": { BOOL: true } },
+        })
+      );
+    } catch (flagErr) {
+      console.error("Could not flag the message as not emailed", flagErr);
+    }
   }
 
   return response(200, { id });
