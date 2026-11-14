@@ -1,0 +1,137 @@
+---
+import HeroMini from "./HeroMini.astro";
+import { FlagMachine } from "../../lib/zdp/flag";
+import { formatClock } from "../../lib/zdp/clock";
+
+const m = new FlagMachine({ landSeconds: 60 });
+const mis = m.timeline("misbehave");
+const onoff = m.timeline("onoff");
+const events = [...mis, ...onoff.filter((e) => e.key === "flippedoff" || e.key === "baseline")];
+const onoffKeys = new Set(onoff.map((e) => e.key));
+const misKeys = new Set(mis.map((e) => e.key));
+const CELLS = 40;
+const toneBorder: Record<string, string> = {
+  go: "data-[state=lit]:border-t-accent",
+  ok: "data-[state=lit]:border-t-[#2ea043]",
+  crit: "data-[state=lit]:border-t-[#f85149]",
+  idle: "",
+};
+---
+
+<div role="tabpanel" data-tabpanel="flag" id="zdp-panel-flag" aria-labelledby="zdp-tab-flag" tabindex="0" hidden>
+  <div class="grid grid-cols-[1fr_1.25fr] max-[920px]:grid-cols-1">
+    <!-- left -->
+    <div class="border-r border-line px-5 py-5 max-[920px]:border-r-0 max-[920px]:border-b">
+      <div class="flex items-center gap-4">
+        <button
+          type="button"
+          role="switch"
+          aria-checked="false"
+          aria-label="resume-pdf feature flag"
+          data-switch
+          class="group/sw relative h-[42px] w-[84px] shrink-0 rounded-full bg-line-2 transition-[background-color,box-shadow] duration-300 aria-checked:bg-[#2ea043] aria-checked:shadow-[0_0_0_6px_rgba(46,160,67,.18)]"
+        >
+          <span
+            data-knob
+            aria-hidden="true"
+            class="absolute left-[5px] top-[5px] h-8 w-8 rounded-full bg-ink transition-transform duration-300 group-aria-checked/sw:translate-x-[42px]"
+          ></span>
+        </button>
+        <span data-switch-state class="font-mono text-[15px] text-ink" aria-live="polite">OFF</span>
+      </div>
+      <div class="mt-2 font-mono text-[11.5px] text-faint">resume-pdf · click the switch to flip it</div>
+
+      <h3 class="m-0 mt-5 font-mono text-[17px] font-bold leading-snug text-ink">A flag is a switch in front of new code.</h3>
+      <p class="mb-0 mt-2.5 text-[14px] leading-relaxed text-muted">
+        The one-page PDF résumé is already shipped, but hidden behind this switch. Flip it on and the site on the right changes for every visitor in about a minute. Flip it off and, a minute later, it's back to how it was. Nothing is deployed either way.
+      </p>
+      <p class="mb-0 mt-2.5 text-[12.5px] leading-snug text-faint">
+        A flag can only be switched on where the release that contains it is already running, one environment at a time.
+      </p>
+      <ul class="mb-0 mt-3 list-disc pl-5 text-[13.5px] leading-relaxed text-body">
+        <li>"↓ resume" button turns solid orange and downloads the PDF</li>
+        <li>an announcement bar appears at the top of the page</li>
+      </ul>
+
+      <div class="mt-4 flex flex-wrap items-center gap-x-2 gap-y-2 font-mono text-[12px] text-muted-2">
+        <span>environment:</span>
+        <span
+          data-flag-env
+          class="rounded border border-line-2 px-1.5 py-0.5 text-faint"
+        >staging</span>
+        <span>·</span>
+        <span data-flag-status aria-live="polite">live in about a minute</span>
+        <span>·</span>
+        <span>deploys: 0</span>
+        <button
+          type="button"
+          data-next
+          hidden
+          aria-disabled="true"
+          class="rounded-md border border-accent px-3 py-1.5 font-mono text-xs text-accent transition-colors hover:bg-accent/10 aria-disabled:border-line aria-disabled:text-faint aria-disabled:hover:bg-transparent"
+        >next ▸</button>
+      </div>
+
+      <div class="mt-4">
+        <button
+          type="button"
+          data-run="misbehave"
+          aria-pressed="false"
+          class="rounded-md border border-line-2 px-3.5 py-2 text-left font-mono text-xs leading-snug text-body transition-colors hover:border-accent hover:text-accent aria-pressed:border-accent aria-pressed:text-accent"
+        >⚠ make it misbehave</button>
+        <span class="ml-2 font-mono text-[11.5px] text-faint">then watch the switch turn itself off</span>
+      </div>
+
+      <div class="mt-5 rounded-md border border-line px-3.5 py-3">
+        <div class="font-mono text-[13px] font-bold text-ink">why flags, if deploys are already safe?</div>
+        <p class="mb-0 mt-1.5 text-[13px] leading-relaxed text-muted">
+          A deploy moves code. A flag moves behaviour. Turning a flag off reaches the app in about a minute and needs no pull request or deploy, so it's the fastest way to stop a feature that's hurting users.
+        </p>
+      </div>
+    </div>
+
+    <!-- right -->
+    <div class="px-5 py-5">
+      <div class="mb-2.5 font-mono text-xs text-faint"># what visitors see · christophercorbin.cloud</div>
+      <HeroMini />
+      <div class="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 font-mono text-[11px] text-faint">
+        <span>flag on → orange résumé button + announcement bar · illustration</span>
+        <span>the page reads the flag on every request</span>
+      </div>
+
+      <div data-gauge class="mt-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-md border border-line px-3 py-2 font-mono text-[11.5px]">
+        <span class="text-muted-2">same 5xx alarm as the deploy</span>
+        <span class="tabular-nums text-ink">
+          <span data-metric="err">–</span> / min · <span data-metric="state">–</span>
+        </span>
+      </div>
+
+      <div class="mt-3 flex flex-wrap gap-[3px]" data-cells role="img" aria-label="No requests yet">
+        {Array.from({ length: CELLS }).map(() => (
+          <span class="h-2.5 w-2.5 rounded-[2px] bg-grid transition-colors duration-200" data-cell aria-hidden="true"></span>
+        ))}
+      </div>
+    </div>
+  </div>
+
+  <!-- timeline -->
+  <ol data-timeline class="m-0 flex list-none flex-wrap gap-3 border-t border-line p-5 max-[920px]:flex-col">
+    {events.map((e) => (
+      <li
+        data-ev={e.key}
+        data-state="idle"
+        data-onoff={onoffKeys.has(e.key) ? "" : undefined}
+        data-mis={misKeys.has(e.key) ? "" : undefined}
+        hidden={!misKeys.has(e.key)}
+        class:list={[
+          "min-w-[140px] flex-1 border-t-2 border-line-2 pt-2 font-mono text-[12px] text-faint data-[state=lit]:text-body",
+          toneBorder[e.tone],
+        ]}
+      >
+        <div class="text-ink">{e.at !== undefined ? `${e.at > 0 ? "≈ " : ""}${formatClock(e.at)} ` : ""}{e.label}</div>
+        <div class="mt-0.5 text-[11.5px] leading-snug">{e.detail}</div>
+        {e.illustrative && <div class="mt-0.5 text-[11px] text-faint">illustrative timing</div>}
+      </li>
+    ))}
+  </ol>
+</div>

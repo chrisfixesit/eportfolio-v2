@@ -299,12 +299,12 @@ export const siteContent = {
         wide: false,
         title: "Zero-Downtime Delivery Pipeline",
         description:
-          "A reference pipeline for releasing without downtime. Each deploy starts the new version beside the old one, sends it 10% of traffic for five minutes, and rolls back on its own if errors spike. GitHub Actions signs in to AWS without stored keys, and all of it is defined in OpenTofu.",
-        highlight: "▸ ECS Fargate · CodeDeploy · CloudWatch alarms · OIDC · watch it roll back ↓",
-        flow: ["GitHub OIDC", "CodeDeploy", "10% canary", "*Auto-rollback"],
+          "A template for releasing on AWS without downtime. Every merge builds one image, promoted sandbox → staging → prod by digest through pull requests, and only once it has run cleanly in the stage before. Each deploy is smoke-tested before users see it, then gets 10% of traffic for five minutes and rolls back on its own if errors rise. In a live drill (Nov 2026) the alarm fired 2m37s into the canary and CodeDeploy rolled back 26 seconds later. No long-lived AWS keys, and all AWS infrastructure is in OpenTofu.",
+        highlight: "▸ ECS Fargate · CodeDeploy blue/green · AppConfig flags · OIDC · drift check",
+        flow: ["Promotion PR", "Smoke test", "10% canary", "*Auto-rollback"],
         links: [
           { label: "view code →", href: "https://github.com/chrisfixesit/zero-downtime-pipeline", primary: false },
-          { label: "architecture →", href: "https://github.com/chrisfixesit/zero-downtime-pipeline#how-a-deploy-flows", primary: false },
+          { label: "architecture →", href: "https://github.com/chrisfixesit/zero-downtime-pipeline#how-a-release-flows", primary: false },
           { label: "watch the demo ↓", href: "#deploy", primary: true },
         ],
       },
@@ -437,9 +437,9 @@ export const resumeContent = {
     },
     {
       title: "Zero-Downtime Delivery Pipeline",
-      url: null,
+      url: "github.com/chrisfixesit/zero-downtime-pipeline",
       description:
-        "Blue/green ECS Fargate deploys with 10% canary shifting, alarm-triggered rollback and keyless OIDC CI/CD, all in OpenTofu.",
+        "Blue/green ECS Fargate deploys promoted by digest through PRs, with a smoke gate, 10% canary and alarm-triggered rollback, proved in live drills. OIDC roles, AWS infrastructure in OpenTofu.",
     },
   ],
   skills: [
