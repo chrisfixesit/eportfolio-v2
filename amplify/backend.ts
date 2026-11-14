@@ -29,7 +29,7 @@ lambda.addToRolePolicy(
   new PolicyStatement({
     effect: Effect.ALLOW,
     actions: ["ses:SendEmail"],
-    resources: ["*"],
+    resources: [CONTACT_SOURCE_ARN],
   })
 );
 
