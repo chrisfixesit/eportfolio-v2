@@ -3,7 +3,7 @@ export const siteContent = {
     siteName: "Christopher Corbin",
     title: "Christopher Corbin — DevOps & Cloud Engineer",
     description:
-      "DevOps & Cloud Engineer. I build software and the cloud it runs on: the app, the infrastructure as code, and the pipelines that release it safely with feature flags and automatic rollback, built for reliability and security.",
+      "DevOps & Cloud Engineer. I build software and the cloud it runs on: the app, the infrastructure as code, and the pipelines that release it safely with feature flags and automatic rollback.",
     ogDescription:
       "DevOps & cloud engineer who builds the app, the infrastructure and the pipeline. ~$150K/yr saved · CI cut from 30+ to under 10 min · 500+ vulnerabilities fixed.",
     domain: "christophercorbin.cloud",
@@ -27,7 +27,7 @@ export const siteContent = {
     commandOutput: "DevOps & cloud engineer who writes the code too: apps, infrastructure as code, CI/CD, AI",
     nameLines: ["Christopher", "Corbin"],
     summary:
-      "I build software and the cloud it runs on: the app, the infrastructure as code, and the pipelines that release it safely with feature flags and automatic rollback, built for reliability and security.",
+      "I build software and the cloud it runs on: the app, the infrastructure as code, and the pipelines that release it safely with feature flags and automatic rollback.",
     ctas: [
       { label: "watch a deploy", href: "#deploy", variant: "solid" },
       { label: "view projects", href: "#projects", variant: "outline" },
@@ -47,7 +47,7 @@ export const siteContent = {
       prefix: "$",
       suffix: "K",
       caption:
-        "Right-sized compute and automated cost guardrails across a 14-account AWS org — about 20% of total cloud spend.",
+        "Right-sized compute and automated cost guardrails across a 14-account AWS org, saving about 20% of total cloud spend.",
       chartLabel: "monthly cloud cost, FY25",
       chartTrend: "▼ trending down",
       points: "0,10 50,24 100,18 150,38 200,50 250,60 300,66",
@@ -70,12 +70,12 @@ export const siteContent = {
       scanResult: "patched",
       squares: 30,
       caption:
-        "hunted down and remediated across production AWS environments, with automated scanning that files every finding and closes it once fixed",
+        "found and remediated across production AWS environments. Automated scanning files each finding as an issue and closes it when the fix ships",
     },
   },
   dora: {
     label: "$ how-i-ship --at-a-glance",
-    labelComment: "# practices, not vanity numbers",
+    labelComment: "# the practices behind every release",
     cells: [
       { label: "Deploy frequency", value: "On merge", caption: "every merge deploys to sandbox automatically; staging and production through approved promotion PRs", green: false },
       { label: "Release integrity", value: "Build once", caption: "the exact image that passed testing is the one promoted to production", green: false },
@@ -89,11 +89,11 @@ export const siteContent = {
     cmd: "cat about.md",
     paragraphs: [
       "I build and run the cloud systems behind live public services in Barbados, and I've been tech lead on four of them, from first design through to production.",
-      "As a cloud and DevOps engineer at <strong>GovTech Barbados</strong>, I work across the whole stack. I write the application, from Next.js front ends to serverless and container back ends, and I build what it runs on: infrastructure as code, CI/CD pipelines that test a release once and promote that same build through every environment, and safeguards like feature flags and automatic rollback. On the government's case management system, that cut pipeline runs from over 30 minutes to under 10, giving the team back about three hours of waiting every working day.",
-      "A lot of my job is removing manual work. Security findings used to be triaged by hand; now a pipeline I built files each one as an issue, assigns it, and closes it when the fix ships. I've also added AI code review to the pipeline, so low-risk pull requests get approved faster. I'm genuinely excited about what AI can do, and I'm always looking for the next place it can save a team time.",
-      "On the security side, I'm on <strong>Protexxa</strong>'s SysOps team, where I build hardened golden images and keep a multi-account AWS environment aligned with CIS benchmarks using Inspector and Systems Manager. That work helped the company become SOC 2 compliant.",
-      "I started in hands-on tech support and operations and studied Computer Science at UWI, so I judge a system by how it holds up for the person using it. I'm as comfortable in a planning session with a ministry as I am reviewing a pull request.",
-      "I'm the founder of <strong>246Labs</strong>, a product studio for software, cloud and AI, where I take products from first idea to live customers. I build them to solve real local problems: SumDeTing, a Socratic maths tutor for Barbadian students, and Bim Weather, a forecast and storm-alert service, both run on Claude via Amazon Bedrock. The studio also builds for clients, such as CargoLink Barbados, a booking and tracking platform for shipping cargo to and from the island.",
+      "As a cloud and DevOps engineer at <strong>GovTech Barbados</strong>, I write the application, from Next.js front ends to serverless and container back ends, and I build what it runs on: infrastructure as code, CI/CD pipelines that test a release once and promote that same build through every environment, and safeguards like feature flags and automatic rollback. On the government's case management system, I cut pipeline runs from over 30 minutes to under 10 by running jobs in parallel and sharding the end-to-end tests, which gives the team back about three hours of waiting every working day.",
+      "A lot of my job is removing manual work. Security findings used to be triaged by hand; now a pipeline I built files each one as an issue, assigns it, and closes it when the fix ships. I've also added AI code review to the pipeline, so low-risk pull requests get approved faster. AI is what I'm most excited about right now, and I keep looking for more routine tasks it can take off a team's hands.",
+      "On the security side, I'm on <strong>Protexxa</strong>'s SysOps team, where I build hardened golden images and keep a multi-account AWS environment aligned with CIS benchmarks using Inspector and Systems Manager. That work helped the company pass its SOC 2 audit.",
+      "I studied Computer Science at UWI and started out in hands-on tech support and operations. Support work taught me to judge a system by how it holds up for the person using it. I'm as comfortable in a planning session with a ministry as I am reviewing a pull request.",
+      "I'm the founder of <strong>246Labs</strong>, a product studio for software, cloud and AI, where I take products from first idea to live customers. My own products are built for Barbados: SumDeTing, a Socratic maths tutor for Barbadian students, and Bim Weather, a forecast and storm-alert service, both run on Claude via Amazon Bedrock. The studio also builds for clients, such as CargoLink Barbados, a booking and tracking platform for shipping cargo to and from the island.",
     ],
   },
   experience: {
@@ -107,11 +107,11 @@ export const siteContent = {
         company: "GovTech Barbados",
         note: null,
         bullets: [
-          "Led delivery as tech lead on 4 public services, taking each from design to production, including the GovTech Hub staff intranet, Service Hub and SME discovery questionnaire",
+          "Led 4 public services as tech lead from design to production, including the GovTech Hub staff intranet, Service Hub and SME discovery questionnaire",
           "Cut CI pipeline time from 30+ minutes to under 10 for the government's case management system by parallelising jobs and sharding end-to-end tests, saving about 3 hours of pipeline time per day",
-          "Designed a build-once release process that promotes one tested container image through every environment, reducing image builds per release from 15 to 3, with AWS AppConfig feature flags and automated rollback",
-          "Automated vulnerability management with a pipeline that files Amazon Inspector findings as issues, assigns owners and closes them once fixed, and added AI code review to CI/CD",
-          "Implemented Datadog monitoring and alerting as code across the platform's public services",
+          "Designed a build-once release process that promotes one tested container image through every environment, cutting image builds per release from 15 to 3, and added AWS AppConfig feature flags with automated rollback",
+          "Automated vulnerability management with a pipeline that files Amazon Inspector findings as issues, assigns owners and closes them once fixed",
+          "Added AI code review to CI/CD, and Datadog monitoring and alerting as code across the platform's public services",
         ],
         dot: "accent",
       },
@@ -121,7 +121,7 @@ export const siteContent = {
         company: "246Labs · Barbados",
         note: "own studio",
         bullets: [
-          "Founded a product studio for software, cloud and AI, taking products from first idea to paying customers",
+          "Founded a product studio for software, cloud and AI, taking products from first idea to live customers",
           "Built and launched SumDeTing, a Socratic AI maths tutor, and Bim Weather, a forecast and storm-alert service, on Claude via Amazon Bedrock",
           "Delivered custom software for paying clients from requirements through to production support, including CargoLink Barbados, a booking and tracking platform for shipping cargo to and from the island",
           "Provisioned every product with OpenTofu and shipped it through CI/CD from day one, on AWS Lambda, ECS Fargate and CloudFront",
@@ -136,7 +136,7 @@ export const siteContent = {
         bullets: [
           "Led Amazon Connect engineering across 3 AWS regions, cutting response times by 35% for 1,000+ users",
           "Built hardened golden images and maintained CIS Benchmark alignment across a 14-account AWS organisation (2,000+ resources) using Amazon Inspector and Systems Manager",
-          "Supported SOC 2 compliance, achieving a 97.2% audit score with zero critical findings",
+          "Supported the company's SOC 2 audit, which it passed with a 97.2% score and zero critical findings",
           "Remediated 500+ vulnerabilities within 30 days across production AWS accounts",
           "Reduced cloud spend by about $150K a year by right-sizing EC2 and RDS",
         ],
@@ -255,7 +255,7 @@ export const siteContent = {
         wide: false,
         title: "SumDeTing: Socratic AI Maths Tutor",
         description:
-          "A Bajan maths tutor that won't just give the answer. Claude on Amazon Bedrock finds where a student's working went wrong and guides them one hint at a time, from Common Entrance to CSEC and CAPE. Optional accounts sync progress across devices, with parental consent for under-13s, and chats are never stored on the server.",
+          "A Bajan maths tutor that helps students work out the answer themselves. Claude on Amazon Bedrock finds where a student's working went wrong and gives one hint at a time, from Common Entrance to CSEC and CAPE. Optional accounts sync progress across devices, with parental consent for under-13s, and chats are never stored on the server.",
         highlight: "▸ serverless Lambda · DynamoDB · SES · KaTeX · Playwright e2e · hardened Docker",
         flow: ["Student", "CloudFront", "Lambda", "*Claude on Bedrock"],
         links: [
@@ -365,7 +365,7 @@ export const resumeContent = {
   ],
   location: "Barbados · open to relocation",
   summary:
-    "DevOps and cloud engineer who builds software, the cloud infrastructure it runs on, and the automated pipelines that release it safely. Cut build and test time from over 30 minutes to under 10, saved about $150K a year in cloud costs, and helped a company achieve SOC 2 compliance. Uses AI to automate repetitive tasks and improve team efficiency, with Claude on Amazon Bedrock.",
+    "DevOps and cloud engineer who builds software, the cloud infrastructure it runs on, and the automated pipelines that release it safely. Cut build and test time from over 30 minutes to under 10, saved about $150K a year in cloud costs, and helped a company achieve SOC 2 compliance. Uses AI, including Claude on Amazon Bedrock, to automate repetitive work such as code review.",
   sections: {
     experience: { title: "Experience", path: "~/experience", cmd: "git log --oneline" },
     projects: { title: "Selected projects", path: "~/projects", cmd: "ls --featured" },
@@ -379,18 +379,17 @@ export const resumeContent = {
       dates: "Jan 2026 – Present",
       company: "GovTech Barbados",
       bullets: [
-        "Led delivery as tech lead on 4 public services, taking each from design to production, including the GovTech Hub staff intranet, Service Hub and SME discovery questionnaire",
+        "Led 4 public services as tech lead from design to production, including the GovTech Hub staff intranet, Service Hub and SME discovery questionnaire",
         "Cut CI pipeline time from 30+ minutes to under 10 for the government's case management system by parallelising jobs and sharding end-to-end tests, saving about 3 hours of pipeline time per day",
-        "Designed a build-once release process that promotes one tested container image through every environment, reducing image builds per release from 15 to 3, with AWS AppConfig feature flags and automated rollback",
+        "Designed a build-once release process that promotes one tested container image through every environment, cutting image builds per release from 15 to 3, and added AWS AppConfig feature flags with automated rollback",
         "Automated vulnerability management with a pipeline that files Amazon Inspector findings as issues, assigns owners and closes them once fixed; added AI code review to CI/CD and Datadog monitoring and alerting as code",
       ],
     },
     {
-      role: "Founder — 246Labs",
+      role: "Founder",
       dates: "2026 – Present",
       company: "246Labs, Barbados · product studio for software, cloud and AI (246labs.cloud)",
       bullets: [
-        "Founded a product studio for software, cloud and AI, taking products from first idea to paying customers",
         "Built and launched SumDeTing, a Socratic AI maths tutor, and Bim Weather, a forecast and storm-alert service, on Claude via Amazon Bedrock",
         "Delivered custom software for paying clients from requirements through to production support, including CargoLink Barbados, a booking and tracking platform for shipping cargo to and from the island",
         "Provisioned every product with OpenTofu and shipped it through CI/CD from day one, on AWS Lambda, ECS Fargate and CloudFront",
@@ -399,11 +398,11 @@ export const resumeContent = {
     {
       role: "AWS SysOps / Cloud & Security Engineer",
       dates: "Feb 2025 – Present",
-      company: "Protexxa — Remote · concurrent contract",
+      company: "Protexxa · Remote · concurrent contract",
       bullets: [
         "Led Amazon Connect engineering across 3 AWS regions, cutting response times by 35% for 1,000+ users",
         "Built hardened golden images and maintained CIS Benchmark alignment across a 14-account AWS organisation (2,000+ resources), remediating 500+ vulnerabilities within 30 days",
-        "Supported SOC 2 compliance, achieving a 97.2% audit score with zero critical findings",
+        "Supported the company's SOC 2 audit, which it passed with a 97.2% score and zero critical findings",
         "Reduced cloud spend by about $150K a year by right-sizing EC2 and RDS",
       ],
     },
@@ -412,7 +411,7 @@ export const resumeContent = {
       dates: "2021 – 2024",
       company: "TORE Barbados · iShop",
       bullets: [
-        "Operations leadership and equipment reliability (-20% downtime); Apple technical support",
+        "Led operations and cut equipment downtime by 20%; provided Apple technical support",
       ],
     },
   ],
@@ -439,7 +438,7 @@ export const resumeContent = {
       title: "Zero-Downtime Delivery Pipeline",
       url: "github.com/chrisfixesit/zero-downtime-pipeline",
       description:
-        "Blue/green ECS Fargate deploys promoted by digest through PRs, with a smoke gate, 10% canary and alarm-triggered rollback, proved in live drills. OIDC roles, AWS infrastructure in OpenTofu.",
+        "Blue/green ECS Fargate deploys promoted by digest through PRs, with a smoke test, 10% canary and alarm-triggered rollback, proved in live drills. OIDC roles, AWS infrastructure in OpenTofu.",
     },
   ],
   skills: [
